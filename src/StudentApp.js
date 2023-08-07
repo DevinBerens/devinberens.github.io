@@ -3,13 +3,13 @@ import moment from "moment";
 
 const StudentApp = () => {
   const [morningList, setMorningList] = useState(
-    localStorage.getItem("morningClass")
-      ? JSON.parse(localStorage.getItem("morningClass"))
+    localStorage.getItem("morningList")
+      ? JSON.parse(localStorage.getItem("morningList"))
       : []
   );
   const [afternoonList, setAfternoonList] = useState(
-    localStorage.getItem("afternoonClass")
-      ? JSON.parse(localStorage.getItem("afternoonClass"))
+    localStorage.getItem("afternoonList")
+      ? JSON.parse(localStorage.getItem("afternoonList"))
       : []
   );
   const [studentName, setStudentName] = useState("");
