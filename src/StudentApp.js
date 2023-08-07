@@ -147,7 +147,7 @@ const StudentApp = () => {
                 display: "flex",
                 fontSize: "26px",
                 marginBottom: "10px",
-                width: "80%",
+                width: "40%",
               }}
               key={index}
             >
@@ -167,7 +167,7 @@ const StudentApp = () => {
                 display: "flex",
                 fontSize: "26px",
                 marginBottom: "10px",
-                width: "80%",
+                width: "40%",
               }}
               key={index}
             >
