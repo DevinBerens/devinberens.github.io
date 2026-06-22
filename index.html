@@ -727,7 +727,7 @@
       };
 
       // Bump this on each deploy so you can tell when the new build is live.
-      const BUILD = "2026-06-22 11:52 CDT";
+      const BUILD = "2026-06-22 12:29 CDT";
 
       const $ = (id) => document.getElementById(id);
       $("build-stamp").textContent = "Updated " + BUILD;
@@ -1171,6 +1171,81 @@
         return data.text || "";
       }
 
+      // Turn raw OCR text into a readable recipe: drop stray fragments, split
+      // two-column ingredient lines, and lay out Ingredients + Instructions.
+      // Falls back to a lightly cleaned version when it can't confidently tell
+      // the two apart, so it never mangles an unusual recipe.
+      function formatRecipeText(raw) {
+        let lines = (raw || "")
+          .replace(/\r/g, "")
+          .split("\n")
+          .map((l) => l.replace(/[ \t]+/g, " ").trim())
+          .filter(Boolean)
+          // drop 1–2 char OCR noise lines that aren't a quantity
+          .filter((l) => l.length > 2 || /\d/.test(l))
+          // strip stray 1–2 letter fragments tacked on a line end ("… Sa")
+          .map((l) => l.replace(/\s[A-Za-z]{1,2}$/, "").trim());
+
+        const QTY = /^(\d+(?:[.\/]\d+)?|[½¼¾⅓⅔])\b/;
+
+        // Split a merged two-column ingredient line at the next quantity.
+        function splitMerged(line) {
+          if (!QTY.test(line)) return [line];
+          const m = /\s(\d+(?:[.\/]\d+)?|[½¼¾⅓⅔])\s/.exec(line);
+          if (m) {
+            const cut = m.index + 1;
+            return [line.slice(0, cut).trim(), line.slice(cut).trim()];
+          }
+          return [line];
+        }
+
+        const headings = [];
+        const ingredients = [];
+        const proseParts = [];
+        let seenIngredient = false;
+
+        for (const original of lines) {
+          for (const line of splitMerged(original)) {
+            if (!line) continue;
+            if (QTY.test(line)) {
+              ingredients.push(line);
+              seenIngredient = true;
+            } else if (
+              !seenIngredient &&
+              /[A-Z]/.test(line) &&
+              line === line.toUpperCase()
+            ) {
+              headings.push(line); // ALL-CAPS title line before ingredients
+            } else {
+              proseParts.push(line);
+            }
+          }
+        }
+
+        const prose = proseParts.join(" ").replace(/\s+/g, " ").trim();
+        const sentences = prose
+          ? (prose.match(/[^.!?]+[.!?]*/g) || [prose])
+              .map((s) => s.trim())
+              .filter(Boolean)
+          : [];
+
+        // Not confident about structure → just return a tidy cleaned version.
+        if (!ingredients.length || !sentences.length) {
+          return (
+            [...headings, ...ingredients, ...sentences].join("\n").trim() ||
+            (raw || "").trim()
+          );
+        }
+
+        const out = [];
+        if (headings.length) out.push(headings.join(" "), "");
+        out.push("Ingredients");
+        ingredients.forEach((i) => out.push("- " + i));
+        out.push("", "Instructions");
+        sentences.forEach((s) => out.push(s));
+        return out.join("\n");
+      }
+
       async function runOcr(source) {
         const box = $("ocr-box");
         const fill = $("ocr-fill");
@@ -1200,7 +1275,7 @@
             status.textContent = "Reading photo (offline engine)…";
             text = await tesseractOcr(canvas, fill, status);
           }
-          text = (text || "").trim();
+          text = formatRecipeText(text);
           const existing = $("recipe-content").value.trim();
           $("recipe-content").value = existing
             ? existing + "\n\n" + text
