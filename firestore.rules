@@ -1,0 +1,23 @@
+rules_version = '2';
+
+// Recipe Box security rules.
+//
+// There are no user accounts in this app — but the app signs in anonymously,
+// so every legitimate request carries an auth token. Requiring `request.auth`
+// blocks drive-by scripts/bots that hit the database directly with just the
+// (public, by-design) web config. Paste these into:
+//   Firebase console → Build → Firestore Database → Rules → Publish
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /groups/{groupId} {
+      allow read, write: if request.auth != null;
+
+      match /recipes/{recipeId} {
+        allow read, write: if request.auth != null;
+      }
+    }
+
+    // Everything else is denied by default.
+  }
+}

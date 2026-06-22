@@ -4,32 +4,29 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0"
     />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta
       name="apple-mobile-web-app-status-bar-style"
       content="black-translucent"
     />
-    <meta name="apple-mobile-web-app-title" content="WHOOP" />
-    <title>Devin's WHOOP</title>
+    <meta name="apple-mobile-web-app-title" content="Recipe Box" />
+    <title>Recipe Box</title>
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 
       :root {
-        --bg: #09090e;
-        --surface: #111118;
-        --surface2: #1a1a24;
-        --border: rgba(255, 255, 255, 0.06);
-        --text: #ececf4;
-        --muted: #5a5a70;
-        --green: #00e676;
-        --yellow: #ffd740;
-        --red: #ff3d57;
-        --blue: #448aff;
-        --purple: #b388ff;
-        --teal: #00e5ff;
-        --ice: #82b1ff; /* ice hockey accent */
+        --bg: #0e0c09;
+        --surface: #181410;
+        --surface2: #241d16;
+        --border: rgba(255, 255, 255, 0.07);
+        --text: #f4efe8;
+        --muted: #8a7d6b;
+        --accent: #ff8a4c; /* warm cooking orange */
+        --accent2: #ffd166;
+        --green: #4caf50;
+        --red: #ff5a5f;
       }
 
       * {
@@ -43,45 +40,371 @@
       body {
         background: var(--bg);
         color: var(--text);
-        font-family:
-          "Inter",
-          -apple-system,
-          sans-serif;
+        font-family: "Inter", -apple-system, sans-serif;
         -webkit-font-smoothing: antialiased;
         min-height: 100vh;
       }
 
-      /* ── LOADING ── */
-      #loading {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        gap: 14px;
-      }
-      .puck {
-        width: 48px;
-        height: 48px;
-        background: var(--text);
-        border-radius: 50%;
-        animation: puck-bounce 0.9s ease-in-out infinite alternate;
-      }
-      @keyframes puck-bounce {
-        from {
-          transform: scaleY(1) translateY(0);
-        }
-        to {
-          transform: scaleY(0.7) translateY(12px);
-        }
-      }
-      #loading p {
-        color: var(--muted);
-        font-size: 14px;
+      body {
+        max-width: 640px;
+        margin: 0 auto;
+        padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 40px);
       }
 
-      /* ── ERROR ── */
-      #error-screen {
+      button,
+      input,
+      textarea,
+      select {
+        font-family: inherit;
+        font-size: 16px; /* prevents iOS zoom on focus */
+      }
+
+      /* ── HEADER ── */
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(14, 12, 9, 0.92);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+        padding: calc(env(safe-area-inset-top, 0px) + 14px) 16px 14px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+      .back-btn {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        color: var(--text);
+        width: 36px;
+        height: 36px;
+        border-radius: 11px;
+        font-size: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+        display: none;
+        align-items: center;
+        justify-content: center;
+      }
+      .header h1 {
+        font-size: 21px;
+        font-weight: 900;
+        letter-spacing: -0.5px;
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .header h1 span {
+        color: var(--accent);
+      }
+
+      /* ── LAYOUT ── */
+      .screen {
+        padding: 18px 16px 0;
+        display: none;
+      }
+      .screen.active {
+        display: block;
+        animation: fade 0.2s ease;
+      }
+      @keyframes fade {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+      }
+      .section-label {
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin: 22px 2px 10px;
+      }
+      .section-label:first-child {
+        margin-top: 2px;
+      }
+
+      /* ── CARDS / ROWS ── */
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+      }
+      .list-row {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 10px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        transition: transform 0.1s ease;
+      }
+      .list-row:active {
+        transform: scale(0.985);
+      }
+      .row-emoji {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: var(--surface2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        flex-shrink: 0;
+      }
+      .row-info {
+        flex: 1;
+        min-width: 0;
+      }
+      .row-title {
+        font-size: 16px;
+        font-weight: 700;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .row-sub {
+        font-size: 13px;
+        color: var(--muted);
+        margin-top: 3px;
+      }
+      .row-chev {
+        color: var(--muted);
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+
+      /* ── BUTTONS ── */
+      .btn {
+        width: 100%;
+        border: none;
+        border-radius: 14px;
+        padding: 15px;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: opacity 0.15s ease;
+      }
+      .btn:active {
+        opacity: 0.8;
+      }
+      .btn-primary {
+        background: var(--accent);
+        color: #1a1206;
+      }
+      .btn-secondary {
+        background: var(--surface2);
+        color: var(--text);
+        border: 1px solid var(--border);
+      }
+      .btn-ghost {
+        background: transparent;
+        color: var(--muted);
+        border: 1px solid var(--border);
+      }
+      .btn-danger {
+        background: transparent;
+        color: var(--red);
+        border: 1px solid rgba(255, 90, 95, 0.4);
+      }
+      .btn-row {
+        display: flex;
+        gap: 10px;
+      }
+      .btn-row .btn {
+        flex: 1;
+      }
+
+      /* ── FORM FIELDS ── */
+      .field {
+        margin-bottom: 16px;
+      }
+      .field label {
+        display: block;
+        font-size: 12px;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 7px;
+      }
+      .input,
+      .textarea,
+      select.input {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 13px;
+        padding: 14px;
+        color: var(--text);
+        outline: none;
+      }
+      .input:focus,
+      .textarea:focus,
+      select.input:focus {
+        border-color: var(--accent);
+      }
+      .textarea {
+        min-height: 240px;
+        resize: vertical;
+        line-height: 1.55;
+      }
+      select.input {
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2212%22%20height%3D%228%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M1%201l5%205%205-5%22%20stroke%3D%22%238a7d6b%22%20stroke-width%3D%222%22%20fill%3D%22none%22%2F%3E%3C%2Fsvg%3E");
+        background-repeat: no-repeat;
+        background-position: right 16px center;
+      }
+      .inline-add {
+        display: flex;
+        gap: 8px;
+      }
+      .inline-add .input {
+        flex: 1;
+      }
+      .inline-add .btn {
+        width: auto;
+        padding: 14px 18px;
+      }
+
+      /* ── MEMBER CHIPS ── */
+      .chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 16px;
+      }
+      .chip {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-size: 14px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .chip.filter {
+        cursor: pointer;
+      }
+      .chip.filter.on {
+        background: var(--accent);
+        color: #1a1206;
+        border-color: var(--accent);
+      }
+      .chip .x {
+        color: var(--muted);
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+      }
+
+      /* ── OCR PROGRESS ── */
+      .ocr-box {
+        background: var(--surface2);
+        border: 1px dashed var(--border);
+        border-radius: 13px;
+        padding: 14px;
+        margin-bottom: 16px;
+        display: none;
+      }
+      .ocr-box.show {
+        display: block;
+      }
+      .ocr-bar {
+        height: 8px;
+        border-radius: 4px;
+        background: var(--bg);
+        overflow: hidden;
+        margin-top: 10px;
+      }
+      .ocr-fill {
+        height: 100%;
+        width: 0;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        transition: width 0.25s ease;
+      }
+      .ocr-status {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .preview-img {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-top: 12px;
+        display: block;
+      }
+
+      /* ── RECIPE DETAIL ── */
+      .recipe-title {
+        font-size: 26px;
+        font-weight: 900;
+        letter-spacing: -0.6px;
+        line-height: 1.15;
+        margin-bottom: 6px;
+      }
+      .recipe-by {
+        font-size: 14px;
+        color: var(--accent);
+        font-weight: 600;
+        margin-bottom: 18px;
+      }
+      .recipe-body {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 18px;
+        font-size: 15px;
+        line-height: 1.7;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin-bottom: 18px;
+      }
+
+      /* ── EMPTY STATE ── */
+      .empty {
+        text-align: center;
+        padding: 44px 20px;
+        color: var(--muted);
+      }
+      .empty .icon {
+        font-size: 42px;
+        margin-bottom: 12px;
+      }
+      .empty p {
+        font-size: 14px;
+        line-height: 1.6;
+        margin-bottom: 4px;
+      }
+
+      .fab-space {
+        height: 16px;
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 7px;
+        line-height: 1.5;
+      }
+
+      /* ── SETUP / LOADING ── */
+      #loading,
+      #setup {
         display: none;
         flex-direction: column;
         align-items: center;
@@ -89,931 +412,693 @@
         min-height: 100vh;
         padding: 32px;
         text-align: center;
-        gap: 12px;
-      }
-      #error-screen h2 {
-        font-size: 20px;
-      }
-      #error-screen p {
-        color: var(--muted);
-        font-size: 14px;
-        line-height: 1.6;
-      }
-
-      /* ── APP ── */
-      #app {
-        display: none;
-        padding-bottom: env(safe-area-inset-bottom, 24px);
-      }
-
-      /* ── HEADER ── */
-      .header {
-        padding: calc(env(safe-area-inset-top, 0px) + 52px) 20px 0;
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        margin-bottom: 28px;
-      }
-      .header-left h1 {
-        font-size: 28px;
-        font-weight: 900;
-        letter-spacing: -0.8px;
-        line-height: 1;
-      }
-      .header-left h1 span {
-        color: var(--ice);
-      }
-      .header-left p {
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 4px;
-      }
-      .sync-badge {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 20px;
-        padding: 5px 12px;
-        font-size: 11px;
-        color: var(--muted);
-        white-space: nowrap;
-      }
-      .sync-dot {
-        display: inline-block;
-        width: 6px;
-        height: 6px;
-        background: var(--green);
-        border-radius: 50;
-        margin-right: 5px;
-        vertical-align: middle;
-        animation: pulse 2s ease-in-out infinite;
-      }
-      @keyframes pulse {
-        0%,
-        100% {
-          opacity: 1;
-        }
-        50% {
-          opacity: 0.3;
-        }
-      }
-
-      /* ── SECTION ── */
-      .section {
-        margin-bottom: 8px;
-      }
-      .section-label {
-        font-size: 10px;
-        font-weight: 700;
-        letter-spacing: 0.1em;
-        text-transform: uppercase;
-        color: var(--muted);
-        padding: 0 20px;
-        margin-bottom: 8px;
-      }
-
-      /* ── CARD ── */
-      .card {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 18px;
-        margin: 0 16px 10px;
-        padding: 18px 20px;
-        overflow: hidden;
-      }
-
-      /* ── HERO RECOVERY CARD ── */
-      .hero-card {
-        margin: 0 16px 10px;
-        border-radius: 22px;
-        overflow: hidden;
-        position: relative;
-        background: var(--surface);
-        border: 1px solid var(--border);
-        padding: 24px 20px 20px;
-      }
-      .hero-card::before {
-        content: "";
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
-        background: var(
-          --recovery-gradient,
-          linear-gradient(90deg, var(--green), var(--teal))
-        );
-      }
-      .hero-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 20px;
-      }
-      .hero-score {
-        font-size: 72px;
-        font-weight: 900;
-        letter-spacing: -5px;
-        line-height: 1;
-      }
-      .hero-label {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        color: var(--muted);
-        margin-top: 4px;
-      }
-      .hero-status {
-        text-align: right;
-      }
-      .status-pill {
-        display: inline-block;
-        padding: 6px 14px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-      .status-desc {
-        font-size: 12px;
-        color: var(--muted);
-      }
-
-      /* ── STAT GRID ── */
-      .stat-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr 1fr;
-        gap: 8px;
-      }
-      .stat-cell {
-        background: var(--surface2);
-        border-radius: 12px;
-        padding: 12px 10px;
-        text-align: center;
-      }
-      .stat-val {
-        font-size: 20px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-        line-height: 1;
-      }
-      .stat-unit {
-        font-size: 10px;
-        color: var(--muted);
-        font-weight: 500;
-      }
-      .stat-lbl {
-        font-size: 9px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: var(--muted);
-        margin-top: 4px;
-      }
-
-      /* ── SLEEP BAR ── */
-      .sleep-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 14px;
-      }
-      .sleep-title {
-        font-size: 15px;
-        font-weight: 700;
-      }
-      .sleep-dur {
-        font-size: 22px;
-        font-weight: 800;
-        letter-spacing: -0.5px;
-      }
-
-      .sleep-bar {
-        height: 10px;
-        border-radius: 5px;
-        background: var(--surface2);
-        overflow: hidden;
-        display: flex;
-        margin-bottom: 12px;
-      }
-      .sleep-seg {
-        height: 100%;
-        transition: width 1.2s cubic-bezier(0.4, 0, 0.2, 1);
-      }
-
-      .sleep-legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-      }
-      .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        font-size: 11px;
-        color: var(--muted);
-      }
-      .legend-dot {
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        flex-shrink: 0;
-      }
-
-      /* ── WORKOUTS ── */
-      .workout-row {
-        display: flex;
-        align-items: center;
         gap: 14px;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--border);
       }
-      .workout-row:last-child {
-        border-bottom: none;
-        padding-bottom: 0;
-      }
-      .workout-row:first-child {
-        padding-top: 0;
-      }
-
-      .wo-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
-        background: rgba(68, 138, 255, 0.1);
+      #loading {
         display: flex;
-        align-items: center;
-        justify-content: center;
+      }
+      .spinner {
+        width: 42px;
+        height: 42px;
+        border: 4px solid var(--surface2);
+        border-top-color: var(--accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      #setup h2 {
         font-size: 22px;
-        flex-shrink: 0;
       }
-      .wo-info {
-        flex: 1;
-        min-width: 0;
-      }
-      .wo-name {
-        font-size: 15px;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .wo-meta {
-        font-size: 11px;
-        color: var(--muted);
-        margin-top: 2px;
-      }
-      .wo-right {
-        text-align: right;
-        flex-shrink: 0;
-      }
-      .wo-strain {
-        font-size: 24px;
-        font-weight: 900;
-        color: var(--blue);
-        letter-spacing: -1px;
-        line-height: 1;
-      }
-      .wo-strain-lbl {
-        font-size: 9px;
-        color: var(--muted);
-        text-transform: uppercase;
-        font-weight: 700;
-      }
-
-      /* ── HRV TREND ── */
-      .hrv-big {
-        font-size: 48px;
-        font-weight: 900;
-        letter-spacing: -3px;
-        color: var(--teal);
-        line-height: 1;
-      }
-      .hrv-sub {
-        font-size: 12px;
-        color: var(--muted);
-        margin-top: 4px;
-        margin-bottom: 16px;
-      }
-      .hrv-bar-row {
-        display: flex;
-        gap: 3px;
-        align-items: flex-end;
-        height: 40px;
-      }
-      .hrv-bar {
-        flex: 1;
-        border-radius: 3px 3px 0 0;
-        background: rgba(0, 229, 255, 0.2);
-        transition: height 0.8s ease;
-        min-height: 4px;
-      }
-      .hrv-bar.today {
-        background: var(--teal);
-      }
-
-      /* ── EMPTY STATE ── */
-      .empty {
-        text-align: center;
-        padding: 24px 0;
+      #setup p,
+      #setup li {
         color: var(--muted);
         font-size: 14px;
-        line-height: 1.6;
+        line-height: 1.7;
       }
-      .empty-icon {
-        font-size: 32px;
-        margin-bottom: 8px;
+      #setup ol {
+        text-align: left;
+        max-width: 420px;
+        padding-left: 20px;
       }
-
-      /* ── NO DATA YET ── */
-      .no-data-card {
-        background: var(--surface);
-        border: 1px dashed var(--border);
-        border-radius: 18px;
-        margin: 0 16px 10px;
-        padding: 28px 20px;
-        text-align: center;
-      }
-      .no-data-card .icon {
-        font-size: 36px;
-        margin-bottom: 10px;
-      }
-      .no-data-card h3 {
-        font-size: 16px;
-        font-weight: 700;
-        margin-bottom: 6px;
-      }
-      .no-data-card p {
+      #setup code {
+        background: var(--surface2);
+        padding: 2px 6px;
+        border-radius: 5px;
+        color: var(--accent2);
         font-size: 13px;
-        color: var(--muted);
-        line-height: 1.6;
-      }
-
-      /* ── DEBUG SECTION ── */
-      details {
-        margin: 0 16px 24px;
-      }
-      summary {
-        font-size: 11px;
-        color: var(--muted);
-        cursor: pointer;
-        padding: 8px 0;
-        list-style: none;
-      }
-      summary::-webkit-details-marker {
-        display: none;
-      }
-      pre {
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 10px;
-        padding: 12px;
-        font-size: 10px;
-        color: var(--muted);
-        overflow-x: auto;
-        white-space: pre-wrap;
-        word-break: break-all;
       }
     </style>
   </head>
   <body>
+    <!-- LOADING -->
     <div id="loading">
-      <div class="puck"></div>
-      <p>Loading your data…</p>
+      <div class="spinner"></div>
+      <p style="color: var(--muted); font-size: 14px">Loading your recipes…</p>
     </div>
 
-    <div id="error-screen">
-      <div style="font-size: 48px">🏒</div>
-      <h2>No data yet</h2>
+    <!-- SETUP (shown if Firebase not configured) -->
+    <div id="setup">
+      <div style="font-size: 48px">🍳</div>
+      <h2>One quick setup step</h2>
       <p>
-        Make sure Noop has synced your WHOOP at least once,<br />and the sync
-        script has run on your Mac.
+        To sync recipes across everyone's phones, add your free Firebase config
+        near the top of <code>index.html</code>.
       </p>
+      <ol>
+        <li>
+          Create a free project at <code>console.firebase.google.com</code>
+        </li>
+        <li>Add a <strong>Web app</strong> and copy its <code>firebaseConfig</code></li>
+        <li>Enable <strong>Cloud Firestore</strong> (start in test mode)</li>
+        <li>
+          Paste the config into the <code>FIREBASE_CONFIG</code> block in
+          <code>index.html</code> and push
+        </li>
+      </ol>
+      <p>See <code>README.md</code> for the full walkthrough.</p>
     </div>
 
-    <div id="app">
+    <!-- APP -->
+    <div id="app" style="display: none">
       <div class="header">
-        <div class="header-left">
-          <h1>Devin<span>'s</span> WHOOP</h1>
-          <p id="header-date">—</p>
-        </div>
-        <div class="sync-badge">
-          <span class="sync-dot"></span>
-          <span id="sync-time">—</span>
+        <button class="back-btn" id="back-btn">‹</button>
+        <h1 id="header-title">Recipe<span> Box</span></h1>
+      </div>
+
+      <!-- SCREEN: GROUPS -->
+      <div class="screen active" id="screen-groups">
+        <div class="section-label">Your Groups</div>
+        <div id="groups-list"></div>
+        <div class="fab-space"></div>
+        <div class="field">
+          <label>Create a new group</label>
+          <div class="inline-add">
+            <input
+              class="input"
+              id="new-group-name"
+              placeholder="e.g. The Berens Family"
+              autocomplete="off"
+            />
+            <button class="btn btn-primary" id="add-group-btn">Add</button>
+          </div>
+          <p class="hint">A group is just a shared collection of cooks and their recipes — no accounts needed.</p>
         </div>
       </div>
 
-      <!-- RECOVERY HERO -->
-      <div class="section">
-        <div class="section-label">Recovery</div>
-        <div class="hero-card" id="hero-card">
-          <div class="hero-row">
-            <div>
-              <div class="hero-score" id="recovery-score">—</div>
-              <div class="hero-label">Recovery Score</div>
-            </div>
-            <div class="hero-status">
-              <div class="status-pill" id="status-pill">—</div>
-              <div class="status-desc" id="status-desc">—</div>
-            </div>
-          </div>
-          <div class="stat-grid">
-            <div class="stat-cell">
-              <div class="stat-val" id="hrv-val">—</div>
-              <div class="stat-lbl">HRV</div>
-              <div class="stat-unit">ms</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val" id="rhr-val">—</div>
-              <div class="stat-lbl">Resting HR</div>
-              <div class="stat-unit">bpm</div>
-            </div>
-            <div class="stat-cell">
-              <div class="stat-val" id="spo2-val">—</div>
-              <div class="stat-lbl">SpO₂</div>
-              <div class="stat-unit">%</div>
-            </div>
+      <!-- SCREEN: GROUP DETAIL -->
+      <div class="screen" id="screen-group">
+        <div class="section-label">Cooks in this group</div>
+        <div class="chips" id="members-chips"></div>
+        <div class="field">
+          <div class="inline-add">
+            <input
+              class="input"
+              id="new-member-name"
+              placeholder="Add a name…"
+              autocomplete="off"
+            />
+            <button class="btn btn-secondary" id="add-member-btn">Add</button>
           </div>
         </div>
+
+        <button class="btn btn-primary" id="open-add-recipe" style="margin-top: 6px">
+          📷 Add a recipe
+        </button>
+
+        <div class="section-label">Recipes</div>
+        <div class="chips" id="recipe-filter-chips"></div>
+        <div id="recipes-list"></div>
+        <div class="fab-space"></div>
       </div>
 
-      <!-- SLEEP -->
-      <div class="section">
-        <div class="section-label">Sleep</div>
-        <div class="card">
-          <div class="sleep-header">
-            <div class="sleep-title">Last Night</div>
-            <div class="sleep-dur" id="sleep-dur">—</div>
-          </div>
-          <div class="sleep-bar" id="sleep-bar">
-            <div
-              class="sleep-seg"
-              id="seg-light"
-              style="width: 0; background: #7c4dff"
-            ></div>
-            <div
-              class="sleep-seg"
-              id="seg-slow"
-              style="width: 0; background: #b388ff"
-            ></div>
-            <div
-              class="sleep-seg"
-              id="seg-rem"
-              style="width: 0; background: #448aff"
-            ></div>
-            <div
-              class="sleep-seg"
-              id="seg-awake"
-              style="width: 0; background: #37474f"
-            ></div>
-          </div>
-          <div class="sleep-legend">
-            <div class="legend-item">
-              <div class="legend-dot" style="background: #7c4dff"></div>
-              <span id="lbl-light">Light</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background: #b388ff"></div>
-              <span id="lbl-slow">SWS</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background: #448aff"></div>
-              <span id="lbl-rem">REM</span>
-            </div>
-            <div class="legend-item">
-              <div class="legend-dot" style="background: #37474f"></div>
-              <span id="lbl-awake">Awake</span>
-            </div>
-          </div>
-          <div style="margin-top: 14px">
-            <div class="stat-grid">
-              <div class="stat-cell">
-                <div class="stat-val" id="sleep-perf">—</div>
-                <div class="stat-lbl">Performance</div>
-                <div class="stat-unit">%</div>
-              </div>
-              <div class="stat-cell">
-                <div class="stat-val" id="sleep-eff">—</div>
-                <div class="stat-lbl">Efficiency</div>
-                <div class="stat-unit">%</div>
-              </div>
-              <div class="stat-cell">
-                <div class="stat-val" id="sleep-latency">—</div>
-                <div class="stat-lbl">Latency</div>
-                <div class="stat-unit">min</div>
-              </div>
-            </div>
+      <!-- SCREEN: ADD / EDIT RECIPE -->
+      <div class="screen" id="screen-add">
+        <div class="field">
+          <label>Whose recipe is this?</label>
+          <select class="input" id="recipe-author"></select>
+        </div>
+
+        <div class="field">
+          <label>Recipe title</label>
+          <input
+            class="input"
+            id="recipe-title"
+            placeholder="e.g. Grandma's Apple Pie"
+            autocomplete="off"
+          />
+        </div>
+
+        <div class="field">
+          <label>Snap a photo of the recipe</label>
+          <button class="btn btn-secondary" id="photo-btn">
+            📷 Take / choose photo
+          </button>
+          <input
+            type="file"
+            id="photo-input"
+            accept="image/*"
+            capture="environment"
+            style="display: none"
+          />
+          <p class="hint">
+            We'll read the text from the page automatically — then you can fix
+            anything before saving. Or just type it in below.
+          </p>
+          <div class="ocr-box" id="ocr-box">
+            <div class="ocr-status" id="ocr-status">Reading photo…</div>
+            <div class="ocr-bar"><div class="ocr-fill" id="ocr-fill"></div></div>
+            <img class="preview-img" id="preview-img" style="display: none" />
           </div>
         </div>
-      </div>
 
-      <!-- HRV TREND -->
-      <div class="section">
-        <div class="section-label">HRV Trend</div>
-        <div class="card">
-          <div class="hrv-big" id="hrv-today">—</div>
-          <div class="hrv-sub" id="hrv-avg">7-day average: —</div>
-          <div class="hrv-bar-row" id="hrv-bars"></div>
+        <div class="field">
+          <label>Recipe</label>
+          <textarea
+            class="textarea"
+            id="recipe-content"
+            placeholder="Ingredients and instructions…"
+          ></textarea>
         </div>
-      </div>
 
-      <!-- RECENT WORKOUTS -->
-      <div class="section">
-        <div class="section-label">Recent Workouts</div>
-        <div class="card" id="workouts-card">
-          <div class="empty">
-            <div class="empty-icon">🏒</div>
-            Loading workouts…
-          </div>
+        <div class="btn-row">
+          <button class="btn btn-ghost" id="cancel-recipe">Cancel</button>
+          <button class="btn btn-primary" id="save-recipe">Save recipe</button>
         </div>
+        <div class="fab-space"></div>
       </div>
 
-      <!-- RAW DEBUG (hidden by default) -->
-      <details>
-        <summary>▸ Debug: raw schema & payload</summary>
-        <pre id="debug-out"></pre>
-      </details>
+      <!-- SCREEN: RECIPE DETAIL -->
+      <div class="screen" id="screen-recipe">
+        <div class="recipe-title" id="detail-title">—</div>
+        <div class="recipe-by" id="detail-author">—</div>
+        <div class="recipe-body" id="detail-body">—</div>
+        <div class="btn-row">
+          <button class="btn btn-secondary" id="edit-recipe">Edit</button>
+          <button class="btn btn-danger" id="delete-recipe">Delete</button>
+        </div>
+        <div class="fab-space"></div>
+      </div>
     </div>
 
-    <script>
-      const DATA_URL = "./whoop-data.json";
+    <!-- Tesseract.js for in-browser OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
 
-      // ── Sport emoji map ─────────────────────────────────────────────────────────
-      const SPORT_EMOJI = {
-        hockey: "🏒",
-        ice: "🏒",
-        skating: "⛸️",
-        run: "🏃",
-        cycling: "🚴",
-        swim: "🏊",
-        lift: "🏋️",
-        weight: "🏋️",
-        gym: "💪",
-        crossfit: "💪",
-        hiit: "🔥",
-        yoga: "🧘",
-        pilates: "🧘",
-        golf: "⛳",
-        basketball: "🏀",
-        soccer: "⚽",
-        tennis: "🎾",
-        box: "🥊",
-        row: "🚣",
-        hike: "🥾",
-        ski: "⛷️",
-        snowboard: "🏂",
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        doc,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+        onSnapshot,
+        query,
+        orderBy,
+        arrayUnion,
+        arrayRemove,
+        serverTimestamp,
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+      import {
+        getAuth,
+        signInAnonymously,
+        onAuthStateChanged,
+      } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+      /* ════════════════════════════════════════════════════════════════════
+         FIREBASE_CONFIG — paste your own Firebase web config here.
+         (Free: console.firebase.google.com → Project settings → Your apps)
+         Until you do, the app shows a setup screen instead of crashing.
+         ════════════════════════════════════════════════════════════════════ */
+      const FIREBASE_CONFIG = {
+        apiKey: "AIzaSyBiFMsKH1ffDL2EjBT3aKKDdLtr5YXk43o",
+        authDomain: "recipe-box-80abe.firebaseapp.com",
+        projectId: "recipe-box-80abe",
+        storageBucket: "recipe-box-80abe.firebasestorage.app",
+        messagingSenderId: "194364382477",
+        appId: "1:194364382477:web:14f1d2490cafd85bcce444",
       };
-      function sportIcon(name = "") {
-        const n = name.toLowerCase();
-        for (const [k, v] of Object.entries(SPORT_EMOJI)) {
-          if (n.includes(k)) return v;
+
+      const $ = (id) => document.getElementById(id);
+
+      // ── Bail to setup screen if not configured ─────────────────────────────
+      if (FIREBASE_CONFIG.projectId === "PASTE_PROJECT_ID") {
+        $("loading").style.display = "none";
+        $("setup").style.display = "flex";
+        throw new Error("Firebase not configured — see setup screen.");
+      }
+
+      const app = initializeApp(FIREBASE_CONFIG);
+      const db = getFirestore(app);
+      const auth = getAuth(app);
+
+      // ── App state ──────────────────────────────────────────────────────────
+      const state = {
+        groups: [],
+        currentGroupId: null,
+        currentGroup: null, // { name, members: [] }
+        recipes: [],
+        recipeFilter: "all",
+        editingRecipeId: null,
+        viewingRecipe: null,
+        unsubGroup: null,
+        unsubRecipes: null,
+      };
+
+      // ── Navigation ───────────────────────────────────────────────────────────
+      const SCREENS = {
+        groups: { el: "screen-groups", title: "Recipe<span> Box</span>", back: false },
+        group: { el: "screen-group", back: true },
+        add: { el: "screen-add", back: true },
+        recipe: { el: "screen-recipe", back: true },
+      };
+      let current = "groups";
+
+      function go(screen) {
+        current = screen;
+        document
+          .querySelectorAll(".screen")
+          .forEach((s) => s.classList.remove("active"));
+        $(SCREENS[screen].el).classList.add("active");
+        $("back-btn").style.display = SCREENS[screen].back ? "flex" : "none";
+
+        if (screen === "groups") {
+          $("header-title").innerHTML = "Recipe<span> Box</span>";
+        } else if (screen === "group") {
+          $("header-title").textContent = state.currentGroup?.name || "Group";
+        } else if (screen === "add") {
+          $("header-title").textContent = state.editingRecipeId
+            ? "Edit recipe"
+            : "Add recipe";
+        } else if (screen === "recipe") {
+          $("header-title").textContent = "Recipe";
         }
-        return "🏅";
+        window.scrollTo(0, 0);
       }
 
-      // ── Recovery color/label ────────────────────────────────────────────────────
-      function recoveryColor(score) {
-        if (score >= 67) return "var(--green)";
-        if (score >= 34) return "var(--yellow)";
-        return "var(--red)";
-      }
-      function recoveryLabel(score) {
-        if (score >= 67) return ["Peak", "Ready to push hard"];
-        if (score >= 34) return ["Moderate", "Moderate effort recommended"];
-        return ["Low", "Take it easy today"];
+      $("back-btn").addEventListener("click", () => {
+        if (current === "group") {
+          teardownGroup();
+          go("groups");
+        } else if (current === "add" || current === "recipe") {
+          go("group");
+        }
+      });
+
+      // ════════════════════════════════════════════════════════════════════════
+      //  GROUPS
+      // ════════════════════════════════════════════════════════════════════════
+      const groupsCol = collection(db, "groups");
+
+      // ── Sign in anonymously, then start listening. Firestore rules require an
+      //    authenticated session, so random scripts hitting the DB are rejected. ──
+      let appStarted = false;
+      function startApp() {
+        if (appStarted) return;
+        appStarted = true;
+        onSnapshot(query(groupsCol, orderBy("name")), (snap) => {
+          state.groups = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+          renderGroups();
+          $("loading").style.display = "none";
+          $("app").style.display = "block";
+        });
       }
 
-      // ── Format helpers ───────────────────────────────────────────────────────────
-      function msToHours(ms) {
-        return ms ? (ms / 3600000).toFixed(1) : null;
-      }
-      function msToMin(ms) {
-        return ms ? Math.round(ms / 60000) : null;
-      }
-      function pct(part, total) {
-        return total ? ((part / total) * 100).toFixed(1) + "%" : "0%";
+      onAuthStateChanged(auth, (user) => {
+        if (user) startApp();
+      });
+      signInAnonymously(auth).catch((err) => {
+        console.error(err);
+        $("loading").innerHTML =
+          `<div style="font-size:42px">🔒</div>` +
+          `<p style="color:var(--muted);font-size:14px;max-width:340px;line-height:1.6;text-align:center">` +
+          `Couldn't sign in. In the Firebase console, enable <b>Authentication → ` +
+          `Sign-in method → Anonymous</b>, then reload.</p>`;
+      });
+
+      function renderGroups() {
+        const el = $("groups-list");
+        if (!state.groups.length) {
+          el.innerHTML = `<div class="empty"><div class="icon">🍲</div><p>No groups yet.</p><p>Create one below to get cooking.</p></div>`;
+          return;
+        }
+        el.innerHTML = state.groups
+          .map((g) => {
+            const count = (g.members || []).length;
+            return `<div class="list-row" data-group="${g.id}">
+              <div class="row-emoji">👨‍🍳</div>
+              <div class="row-info">
+                <div class="row-title">${esc(g.name)}</div>
+                <div class="row-sub">${count} cook${count === 1 ? "" : "s"}</div>
+              </div>
+              <div class="row-chev">›</div>
+            </div>`;
+          })
+          .join("");
+        el.querySelectorAll("[data-group]").forEach((row) =>
+          row.addEventListener("click", () => openGroup(row.dataset.group))
+        );
       }
 
-      // ── Find a value from a row by trying multiple possible column names ─────────
-      function col(row, ...keys) {
-        if (!row) return null;
-        for (const k of keys) {
-          if (row[k] !== undefined && row[k] !== null) return row[k];
-          // case-insensitive fallback
-          const lk = k.toLowerCase();
-          for (const rk of Object.keys(row)) {
-            if (
-              rk.toLowerCase() === lk &&
-              row[rk] !== null &&
-              row[rk] !== undefined
-            )
-              return row[rk];
+      async function addGroup() {
+        const name = $("new-group-name").value.trim();
+        if (!name) return;
+        $("new-group-name").value = "";
+        await addDoc(groupsCol, {
+          name,
+          members: [],
+          createdAt: serverTimestamp(),
+        });
+      }
+      $("add-group-btn").addEventListener("click", addGroup);
+      $("new-group-name").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addGroup();
+      });
+
+      // ════════════════════════════════════════════════════════════════════════
+      //  GROUP DETAIL (members + recipes)
+      // ════════════════════════════════════════════════════════════════════════
+      function openGroup(groupId) {
+        teardownGroup();
+        state.currentGroupId = groupId;
+        state.recipeFilter = "all";
+
+        state.unsubGroup = onSnapshot(doc(db, "groups", groupId), (d) => {
+          if (!d.exists()) {
+            teardownGroup();
+            go("groups");
+            return;
           }
-        }
-        return null;
-      }
+          state.currentGroup = d.data();
+          if (current === "group") $("header-title").textContent = d.data().name;
+          renderMembers();
+          renderAuthorOptions();
+          renderRecipeFilters();
+        });
 
-      // ── Render ───────────────────────────────────────────────────────────────────
-      function render(data) {
-        // ── Sync time
-        const syncedAt = new Date(data.synced_at);
-        document.getElementById("sync-time").textContent =
-          syncedAt.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-          });
-        document.getElementById("header-date").textContent =
-          syncedAt.toLocaleDateString([], {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          });
-
-        // ── Debug
-        document.getElementById("debug-out").textContent = JSON.stringify(
-          { schema: data.schema, tables: data.tables },
-          null,
-          2,
+        const recipesCol = collection(db, "groups", groupId, "recipes");
+        state.unsubRecipes = onSnapshot(
+          query(recipesCol, orderBy("createdAt", "desc")),
+          (snap) => {
+            state.recipes = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            renderRecipes();
+            renderRecipeFilters();
+          }
         );
 
-        // ── Recovery ──────────────────────────────────────────────────────────────
-        const rec = data.recoveries?.[0];
-        if (rec) {
-          const score = col(
-            rec,
-            "recovery_score",
-            "recoveryScore",
-            "score",
-            "recovery",
-          );
-          const hrv = col(rec, "hrv_rmssd", "hrv", "hrv_rmssd_milli", "rmssd");
-          const rhr = col(
-            rec,
-            "resting_heart_rate",
-            "rhr",
-            "resting_hr",
-            "restingHeartRate",
-          );
-          const spo2 = col(rec, "spo2", "spo2_percentage", "blood_oxygen");
-
-          if (score !== null) {
-            const s = Math.round(Number(score));
-            const color = recoveryColor(s);
-            const [label, desc] = recoveryLabel(s);
-            document.getElementById("recovery-score").textContent = s;
-            document.getElementById("recovery-score").style.color = color;
-            document
-              .getElementById("hero-card")
-              .style.setProperty(
-                "--recovery-gradient",
-                `linear-gradient(90deg, ${color}, var(--teal))`,
-              );
-            const pill = document.getElementById("status-pill");
-            pill.textContent = label;
-            pill.style.background = color + "22";
-            pill.style.color = color;
-            document.getElementById("status-desc").textContent = desc;
-          }
-          if (hrv) {
-            document.getElementById("hrv-val").textContent = Math.round(
-              Number(hrv),
-            );
-          }
-          if (rhr) {
-            document.getElementById("rhr-val").textContent = Math.round(
-              Number(rhr),
-            );
-          }
-          if (spo2) {
-            document.getElementById("spo2-val").textContent =
-              Number(spo2).toFixed(1);
-          }
-        }
-
-        // ── Sleep ─────────────────────────────────────────────────────────────────
-        const sleep = data.sleeps?.[0];
-        if (sleep) {
-          const lightMs = col(
-            sleep,
-            "light_sleep_duration",
-            "light_sleep_duration_milli",
-            "light",
-            "lightSleepMs",
-          );
-          const slowMs = col(
-            sleep,
-            "slow_wave_sleep_duration",
-            "slow_wave_sleep_duration_milli",
-            "sws",
-            "slowWave",
-          );
-          const remMs = col(
-            sleep,
-            "rem_sleep_duration",
-            "rem_sleep_duration_milli",
-            "rem",
-            "remMs",
-          );
-          const awakeMs = col(
-            sleep,
-            "awake_duration",
-            "awake_duration_milli",
-            "awake",
-            "awakeMs",
-          );
-          const totalMs =
-            (lightMs || 0) + (slowMs || 0) + (remMs || 0) + (awakeMs || 0);
-          const perf = col(
-            sleep,
-            "sleep_performance_percentage",
-            "performance",
-            "sleep_performance",
-            "performance_pct",
-          );
-          const eff = col(
-            sleep,
-            "sleep_efficiency_percentage",
-            "efficiency",
-            "sleep_efficiency",
-          );
-          const latency = col(
-            sleep,
-            "sleep_latency",
-            "latency",
-            "sleep_onset",
-            "sleep_latency_milli",
-          );
-
-          if (totalMs > 0) {
-            document.getElementById("sleep-dur").textContent =
-              msToHours(totalMs) + "h";
-            document.getElementById("seg-light").style.width = pct(
-              lightMs || 0,
-              totalMs,
-            );
-            document.getElementById("seg-slow").style.width = pct(
-              slowMs || 0,
-              totalMs,
-            );
-            document.getElementById("seg-rem").style.width = pct(
-              remMs || 0,
-              totalMs,
-            );
-            document.getElementById("seg-awake").style.width = pct(
-              awakeMs || 0,
-              totalMs,
-            );
-            const fmt = (ms) => (ms ? msToHours(ms) + "h" : "—");
-            document.getElementById("lbl-light").textContent =
-              `Light ${fmt(lightMs)}`;
-            document.getElementById("lbl-slow").textContent =
-              `SWS ${fmt(slowMs)}`;
-            document.getElementById("lbl-rem").textContent =
-              `REM ${fmt(remMs)}`;
-            document.getElementById("lbl-awake").textContent =
-              `Awake ${fmt(awakeMs)}`;
-          }
-          if (perf)
-            document.getElementById("sleep-perf").textContent = Math.round(
-              Number(perf),
-            );
-          if (eff)
-            document.getElementById("sleep-eff").textContent = Math.round(
-              Number(eff),
-            );
-          if (latency)
-            document.getElementById("sleep-latency").textContent =
-              msToMin(latency);
-        }
-
-        // ── HRV Trend ─────────────────────────────────────────────────────────────
-        const hrvRecords = data.recoveries?.slice(0, 7).reverse() || [];
-        if (hrvRecords.length > 0) {
-          const values = hrvRecords
-            .map((r) =>
-              Number(
-                col(r, "hrv_rmssd", "hrv", "hrv_rmssd_milli", "rmssd") || 0,
-              ),
-            )
-            .filter((v) => v > 0);
-
-          if (values.length > 0) {
-            const latest = values[values.length - 1];
-            const avg = values.reduce((a, b) => a + b, 0) / values.length;
-            const maxV = Math.max(...values);
-
-            document.getElementById("hrv-today").textContent =
-              Math.round(latest);
-            document.getElementById("hrv-avg").textContent =
-              `7-day average: ${Math.round(avg)} ms`;
-
-            const barsEl = document.getElementById("hrv-bars");
-            barsEl.innerHTML = values
-              .map((v, i) => {
-                const h = maxV > 0 ? Math.max(8, (v / maxV) * 40) : 8;
-                const isToday = i === values.length - 1;
-                return `<div class="hrv-bar${isToday ? " today" : ""}" style="height:${h}px" title="${Math.round(v)} ms"></div>`;
-              })
-              .join("");
-          }
-        }
-
-        // ── Workouts ──────────────────────────────────────────────────────────────
-        const workouts = data.workouts || [];
-        const woCard = document.getElementById("workouts-card");
-        if (!workouts.length) {
-          woCard.innerHTML = `<div class="empty"><div class="empty-icon">🏒</div>No workouts yet.<br>Wear your WHOOP to your next hockey game!</div>`;
-        } else {
-          woCard.innerHTML = workouts
-            .slice(0, 8)
-            .map((w) => {
-              const name =
-                col(
-                  w,
-                  "sport_name",
-                  "sportName",
-                  "activity",
-                  "workout_type",
-                  "type",
-                ) || "Workout";
-              const strain = col(w, "strain", "workout_strain", "day_strain");
-              const avgHr = col(
-                w,
-                "average_heart_rate",
-                "avg_hr",
-                "averageHeartRate",
-              );
-              const maxHr = col(w, "max_heart_rate", "max_hr", "maxHeartRate");
-              const start = col(
-                w,
-                "start",
-                "start_time",
-                "startTime",
-                "started_at",
-              );
-              const end = col(w, "end", "end_time", "endTime", "ended_at");
-              const durMin =
-                start && end
-                  ? Math.round((new Date(end) - new Date(start)) / 60000)
-                  : col(w, "duration", "duration_seconds")
-                    ? Math.round(
-                        Number(col(w, "duration", "duration_seconds")) / 60,
-                      )
-                    : null;
-              const dateStr = start
-                ? new Date(start).toLocaleDateString([], {
-                    month: "short",
-                    day: "numeric",
-                  })
-                : "";
-
-              const strainDisplay = strain ? Number(strain).toFixed(1) : "—";
-              const meta = [
-                dateStr,
-                durMin ? `${durMin} min` : null,
-                avgHr ? `${Math.round(avgHr)} bpm` : null,
-                maxHr ? `${Math.round(maxHr)} max` : null,
-              ]
-                .filter(Boolean)
-                .join(" · ");
-
-              return `
-        <div class="workout-row">
-          <div class="wo-icon">${sportIcon(name)}</div>
-          <div class="wo-info">
-            <div class="wo-name">${name}</div>
-            <div class="wo-meta">${meta || "No metadata"}</div>
-          </div>
-          <div class="wo-right">
-            <div class="wo-strain">${strainDisplay}</div>
-            <div class="wo-strain-lbl">Strain</div>
-          </div>
-        </div>`;
-            })
-            .join("");
-        }
+        go("group");
       }
 
-      // ── Boot ─────────────────────────────────────────────────────────────────────
-      async function boot() {
+      function teardownGroup() {
+        if (state.unsubGroup) state.unsubGroup();
+        if (state.unsubRecipes) state.unsubRecipes();
+        state.unsubGroup = state.unsubRecipes = null;
+        state.recipes = [];
+        state.currentGroup = null;
+        state.currentGroupId = null;
+      }
+
+      function renderMembers() {
+        const members = state.currentGroup?.members || [];
+        const el = $("members-chips");
+        if (!members.length) {
+          el.innerHTML = `<span class="hint">No cooks yet — add some names below.</span>`;
+          return;
+        }
+        el.innerHTML = members
+          .map(
+            (m) =>
+              `<span class="chip">${esc(m)}<span class="x" data-remove="${esc(
+                m
+              )}">×</span></span>`
+          )
+          .join("");
+        el.querySelectorAll("[data-remove]").forEach((x) =>
+          x.addEventListener("click", () => removeMember(x.dataset.remove))
+        );
+      }
+
+      async function addMember() {
+        const name = $("new-member-name").value.trim();
+        if (!name || !state.currentGroupId) return;
+        $("new-member-name").value = "";
+        await updateDoc(doc(db, "groups", state.currentGroupId), {
+          members: arrayUnion(name),
+        });
+      }
+      $("add-member-btn").addEventListener("click", addMember);
+      $("new-member-name").addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addMember();
+      });
+
+      async function removeMember(name) {
+        if (!state.currentGroupId) return;
+        if (!confirm(`Remove ${name} from this group?`)) return;
+        await updateDoc(doc(db, "groups", state.currentGroupId), {
+          members: arrayRemove(name),
+        });
+      }
+
+      function renderRecipeFilters() {
+        const members = state.currentGroup?.members || [];
+        const el = $("recipe-filter-chips");
+        if (!state.recipes.length) {
+          el.innerHTML = "";
+          return;
+        }
+        const authors = [...new Set(state.recipes.map((r) => r.author))];
+        const opts = ["all", ...members.filter((m) => authors.includes(m))];
+        // include any authors no longer in members list too
+        authors.forEach((a) => {
+          if (!opts.includes(a)) opts.push(a);
+        });
+        el.innerHTML = opts
+          .map((o) => {
+            const label = o === "all" ? "Everyone" : o;
+            const on = state.recipeFilter === o ? " on" : "";
+            return `<span class="chip filter${on}" data-filter="${esc(
+              o
+            )}">${esc(label)}</span>`;
+          })
+          .join("");
+        el.querySelectorAll("[data-filter]").forEach((c) =>
+          c.addEventListener("click", () => {
+            state.recipeFilter = c.dataset.filter;
+            renderRecipeFilters();
+            renderRecipes();
+          })
+        );
+      }
+
+      function renderRecipes() {
+        const el = $("recipes-list");
+        let recipes = state.recipes;
+        if (state.recipeFilter !== "all") {
+          recipes = recipes.filter((r) => r.author === state.recipeFilter);
+        }
+        if (!recipes.length) {
+          el.innerHTML = `<div class="empty"><div class="icon">📖</div><p>No recipes yet.</p><p>Tap “Add a recipe” to snap one in.</p></div>`;
+          return;
+        }
+        el.innerHTML = recipes
+          .map(
+            (r) => `<div class="list-row" data-recipe="${r.id}">
+              <div class="row-emoji">🍽️</div>
+              <div class="row-info">
+                <div class="row-title">${esc(r.title || "Untitled recipe")}</div>
+                <div class="row-sub">by ${esc(r.author || "Unknown")}</div>
+              </div>
+              <div class="row-chev">›</div>
+            </div>`
+          )
+          .join("");
+        el.querySelectorAll("[data-recipe]").forEach((row) =>
+          row.addEventListener("click", () => openRecipe(row.dataset.recipe))
+        );
+      }
+
+      // ════════════════════════════════════════════════════════════════════════
+      //  ADD / EDIT RECIPE
+      // ════════════════════════════════════════════════════════════════════════
+      function renderAuthorOptions() {
+        const members = state.currentGroup?.members || [];
+        const sel = $("recipe-author");
+        const prev = sel.value;
+        if (!members.length) {
+          sel.innerHTML = `<option value="">Add a cook first…</option>`;
+          return;
+        }
+        sel.innerHTML = members
+          .map((m) => `<option value="${esc(m)}">${esc(m)}</option>`)
+          .join("");
+        if (members.includes(prev)) sel.value = prev;
+      }
+
+      function resetRecipeForm() {
+        state.editingRecipeId = null;
+        $("recipe-title").value = "";
+        $("recipe-content").value = "";
+        $("preview-img").style.display = "none";
+        $("preview-img").src = "";
+        $("ocr-box").classList.remove("show");
+        $("ocr-fill").style.width = "0";
+        renderAuthorOptions();
+      }
+
+      $("open-add-recipe").addEventListener("click", () => {
+        if (!(state.currentGroup?.members || []).length) {
+          alert("Add at least one cook to the group first.");
+          return;
+        }
+        resetRecipeForm();
+        go("add");
+      });
+
+      $("cancel-recipe").addEventListener("click", () => go("group"));
+
+      // ── Photo → OCR ──────────────────────────────────────────────────────────
+      $("photo-btn").addEventListener("click", () => $("photo-input").click());
+
+      $("photo-input").addEventListener("change", async (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        const box = $("ocr-box");
+        const fill = $("ocr-fill");
+        const status = $("ocr-status");
+        const img = $("preview-img");
+
+        box.classList.add("show");
+        img.src = URL.createObjectURL(file);
+        img.style.display = "block";
+        fill.style.width = "5%";
+        status.textContent = "Reading photo…";
+        $("photo-btn").disabled = true;
+
         try {
-          const res = await fetch(DATA_URL + "?t=" + Date.now());
-          if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const data = await res.json();
-
-          if (!data || !data.synced_at) throw new Error("Empty payload");
-
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("app").style.display = "block";
-          render(data);
-        } catch (e) {
-          document.getElementById("loading").style.display = "none";
-          document.getElementById("error-screen").style.display = "flex";
-          console.error(e);
+          const { data } = await Tesseract.recognize(file, "eng", {
+            logger: (m) => {
+              if (m.status === "recognizing text") {
+                fill.style.width = Math.round(m.progress * 100) + "%";
+                status.textContent = `Reading… ${Math.round(m.progress * 100)}%`;
+              } else {
+                status.textContent = m.status;
+              }
+            },
+          });
+          fill.style.width = "100%";
+          const text = (data.text || "").trim();
+          const existing = $("recipe-content").value.trim();
+          $("recipe-content").value = existing
+            ? existing + "\n\n" + text
+            : text;
+          status.textContent = text
+            ? "Done — check the text below and fix anything."
+            : "Couldn't find text. Try a clearer, straight-on photo.";
+        } catch (err) {
+          console.error(err);
+          status.textContent = "Failed to read photo. You can type it instead.";
+        } finally {
+          $("photo-btn").disabled = false;
+          e.target.value = ""; // allow re-selecting the same file
         }
+      });
+
+      // ── Save ──────────────────────────────────────────────────────────────────
+      $("save-recipe").addEventListener("click", async () => {
+        const author = $("recipe-author").value;
+        const title = $("recipe-title").value.trim();
+        const content = $("recipe-content").value.trim();
+        if (!author) return alert("Pick whose recipe this is.");
+        if (!title) return alert("Give the recipe a title.");
+        if (!content) return alert("The recipe is empty.");
+
+        const recipesCol = collection(
+          db,
+          "groups",
+          state.currentGroupId,
+          "recipes"
+        );
+        const btn = $("save-recipe");
+        btn.disabled = true;
+        btn.textContent = "Saving…";
+        try {
+          if (state.editingRecipeId) {
+            await updateDoc(
+              doc(recipesCol, state.editingRecipeId),
+              { author, title, content }
+            );
+          } else {
+            await addDoc(recipesCol, {
+              author,
+              title,
+              content,
+              createdAt: serverTimestamp(),
+            });
+          }
+          go("group");
+        } catch (err) {
+          console.error(err);
+          alert("Couldn't save. Check your connection and try again.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "Save recipe";
+        }
+      });
+
+      // ════════════════════════════════════════════════════════════════════════
+      //  RECIPE DETAIL
+      // ════════════════════════════════════════════════════════════════════════
+      function openRecipe(recipeId) {
+        const r = state.recipes.find((x) => x.id === recipeId);
+        if (!r) return;
+        state.viewingRecipe = r;
+        $("detail-title").textContent = r.title || "Untitled recipe";
+        $("detail-author").textContent = "by " + (r.author || "Unknown");
+        $("detail-body").textContent = r.content || "";
+        go("recipe");
       }
 
-      boot();
+      $("edit-recipe").addEventListener("click", () => {
+        const r = state.viewingRecipe;
+        if (!r) return;
+        resetRecipeForm();
+        state.editingRecipeId = r.id;
+        renderAuthorOptions();
+        $("recipe-author").value = r.author || "";
+        $("recipe-title").value = r.title || "";
+        $("recipe-content").value = r.content || "";
+        go("add");
+      });
+
+      $("delete-recipe").addEventListener("click", async () => {
+        const r = state.viewingRecipe;
+        if (!r) return;
+        if (!confirm(`Delete “${r.title}”? This can't be undone.`)) return;
+        await deleteDoc(
+          doc(db, "groups", state.currentGroupId, "recipes", r.id)
+        );
+        go("group");
+      });
+
+      // ── Util ──────────────────────────────────────────────────────────────────
+      function esc(s) {
+        return String(s ?? "").replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[c]
+        );
+      }
     </script>
   </body>
 </html>
