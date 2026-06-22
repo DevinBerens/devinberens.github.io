@@ -1069,6 +1069,76 @@
         canvas.toBlob((blob) => blob && runOcr(blob), "image/png");
       });
 
+      // Clean up the image before OCR: upscale small shots, convert to
+      // grayscale, and boost contrast. Both engines read black-on-white text
+      // far better than a raw, low-contrast phone photo.
+      async function preprocess(source) {
+        const bitmap = await createImageBitmap(source);
+        const minSide = Math.min(bitmap.width, bitmap.height);
+        const scale = Math.min(3, Math.max(1, 1600 / minSide));
+        const w = Math.round(bitmap.width * scale);
+        const h = Math.round(bitmap.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(bitmap, 0, 0, w, h);
+        const imgData = ctx.getImageData(0, 0, w, h);
+        const d = imgData.data;
+        const contrast = 1.4;
+        const intercept = 128 * (1 - contrast);
+        for (let i = 0; i < d.length; i += 4) {
+          let gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          gray = gray * contrast + intercept;
+          gray = gray < 0 ? 0 : gray > 255 ? 255 : gray;
+          d[i] = d[i + 1] = d[i + 2] = gray;
+        }
+        ctx.putImageData(imgData, 0, 0);
+        return canvas;
+      }
+
+      // Primary engine: Google Cloud Vision (reuses the referrer-restricted
+      // Firebase browser key). Throws if the Vision API isn't enabled yet, so
+      // runOcr can fall back to Tesseract.
+      async function cloudVisionOcr(canvas) {
+        const base64 = canvas.toDataURL("image/jpeg", 0.95).split(",")[1];
+        const res = await fetch(
+          `https://vision.googleapis.com/v1/images:annotate?key=${FIREBASE_CONFIG.apiKey}`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              requests: [
+                {
+                  image: { content: base64 },
+                  features: [{ type: "DOCUMENT_TEXT_DETECTION" }],
+                  imageContext: { languageHints: ["en"] },
+                },
+              ],
+            }),
+          }
+        );
+        const json = await res.json();
+        const apiErr = json.error || json.responses?.[0]?.error;
+        if (!res.ok || apiErr) {
+          throw new Error(apiErr?.message || `HTTP ${res.status}`);
+        }
+        return (json.responses?.[0]?.fullTextAnnotation?.text || "").trim();
+      }
+
+      // Fallback engine: in-browser Tesseract.
+      async function tesseractOcr(canvas, fill, status) {
+        const { data } = await Tesseract.recognize(canvas, "eng", {
+          logger: (m) => {
+            if (m.status === "recognizing text") {
+              fill.style.width = Math.round(m.progress * 100) + "%";
+              status.textContent = `Reading… ${Math.round(m.progress * 100)}%`;
+            }
+          },
+        });
+        return data.text || "";
+      }
+
       async function runOcr(source) {
         const box = $("ocr-box");
         const fill = $("ocr-fill");
@@ -1079,22 +1149,26 @@
         img.src = URL.createObjectURL(source);
         img.style.display = "block";
         fill.style.width = "5%";
-        status.textContent = "Reading photo…";
+        status.textContent = "Preparing photo…";
         $("photo-btn").disabled = true;
 
         try {
-          const { data } = await Tesseract.recognize(source, "eng", {
-            logger: (m) => {
-              if (m.status === "recognizing text") {
-                fill.style.width = Math.round(m.progress * 100) + "%";
-                status.textContent = `Reading… ${Math.round(m.progress * 100)}%`;
-              } else {
-                status.textContent = m.status;
-              }
-            },
-          });
-          fill.style.width = "100%";
-          const text = (data.text || "").trim();
+          const canvas = await preprocess(source);
+          let text = "";
+          try {
+            status.textContent = "Reading photo…";
+            fill.style.width = "40%";
+            text = await cloudVisionOcr(canvas);
+            fill.style.width = "100%";
+          } catch (visionErr) {
+            console.warn(
+              "Cloud Vision unavailable, falling back to Tesseract:",
+              visionErr
+            );
+            status.textContent = "Reading photo (offline engine)…";
+            text = await tesseractOcr(canvas, fill, status);
+          }
+          text = (text || "").trim();
           const existing = $("recipe-content").value.trim();
           $("recipe-content").value = existing
             ? existing + "\n\n" + text
