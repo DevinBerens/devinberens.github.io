@@ -727,7 +727,7 @@
       };
 
       // Bump this on each deploy so you can tell when the new build is live.
-      const BUILD = "2026-06-22 12:29 CDT";
+      const BUILD = "2026-06-22 12:38 CDT";
 
       const $ = (id) => document.getElementById(id);
       $("build-stamp").textContent = "Updated " + BUILD;
@@ -1176,15 +1176,51 @@
       // Falls back to a lightly cleaned version when it can't confidently tell
       // the two apart, so it never mangles an unusual recipe.
       function formatRecipeText(raw) {
+        // Short tokens that are real and must NOT be treated as junk.
+        const KEEP = new Set([
+          "oz", "lb", "ml", "qt", "pt", "kg", "g", "c", "to", "of", "in",
+          "a", "an", "or", "up", "&", "it", "is", "at", "on", "as", "be",
+          "do", "so",
+        ]);
+
+        // Is a short token OCR noise rather than real text?
+        function isJunkToken(tok) {
+          tok = tok.replace(/[.,;:]+$/, "");
+          if (!tok) return true;
+          if (KEEP.has(tok.toLowerCase())) return false;
+          if (/^\d+(?:[.\/]\d+)?$/.test(tok)) return false; // numbers / fractions
+          if (/^[^\w]+$/.test(tok)) return true; // pure punctuation/symbols
+          if (tok.length <= 3 && /[A-Za-z]/.test(tok) && /\d/.test(tok))
+            return true; // mixed gibberish like "a8", "x9"
+          if (/^[A-Za-z]{1,2}$/.test(tok)) return true; // stray 1–2 letters
+          return false;
+        }
+
+        // Strip symbol noise and junk tokens off the ends of a line.
+        function denoise(line) {
+          let l = line
+            .replace(/[~`*_=|<>^\\]+/g, " ") // symbol runs → space
+            .replace(/\s+/g, " ")
+            .trim();
+          let parts = l.split(" ");
+          // peel up to 2 junk tokens off the end
+          for (let k = 0; k < 2 && parts.length > 1; k++) {
+            if (isJunkToken(parts[parts.length - 1])) parts.pop();
+            else break;
+          }
+          // peel a single stray letter off the front ("i Recipe…"), but leave
+          // real two-letter starters like "In"/"To" alone
+          if (parts.length > 1 && /^[A-Za-z]$/.test(parts[0])) parts.shift();
+          return parts.join(" ").trim();
+        }
+
         let lines = (raw || "")
           .replace(/\r/g, "")
           .split("\n")
-          .map((l) => l.replace(/[ \t]+/g, " ").trim())
+          .map((l) => denoise(l.replace(/[ \t]+/g, " ").trim()))
           .filter(Boolean)
           // drop 1–2 char OCR noise lines that aren't a quantity
-          .filter((l) => l.length > 2 || /\d/.test(l))
-          // strip stray 1–2 letter fragments tacked on a line end ("… Sa")
-          .map((l) => l.replace(/\s[A-Za-z]{1,2}$/, "").trim());
+          .filter((l) => l.length > 2 || /\d/.test(l));
 
         const QTY = /^(\d+(?:[.\/]\d+)?|[½¼¾⅓⅔])\b/;
 
