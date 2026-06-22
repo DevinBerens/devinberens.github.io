@@ -451,6 +451,15 @@
         color: var(--accent2);
         font-size: 13px;
       }
+      /* ── BUILD STAMP ── */
+      .build-stamp {
+        text-align: center;
+        color: var(--muted);
+        font-size: 11px;
+        letter-spacing: 0.02em;
+        margin: -6px 0 10px;
+      }
+
       /* ── CROP MODAL ── */
       .crop-modal {
         position: fixed;
@@ -533,6 +542,7 @@
         <button class="back-btn" id="back-btn">‹</button>
         <h1 id="header-title">Recipe<span> Box</span></h1>
       </div>
+      <div class="build-stamp" id="build-stamp"></div>
 
       <!-- SCREEN: GROUPS -->
       <div class="screen active" id="screen-groups">
@@ -703,7 +713,11 @@
         appId: "1:194364382477:web:14f1d2490cafd85bcce444",
       };
 
+      // Bump this on each deploy so you can tell when the new build is live.
+      const BUILD = "2026-06-22 11:38 CDT";
+
       const $ = (id) => document.getElementById(id);
+      $("build-stamp").textContent = "Updated " + BUILD;
 
       // ── Bail to setup screen if not configured ─────────────────────────────
       if (FIREBASE_CONFIG.projectId === "PASTE_PROJECT_ID") {
