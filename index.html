@@ -492,10 +492,18 @@
         display: block;
         max-width: 100%;
       }
+      .crop-rotate {
+        display: flex;
+        gap: 12px;
+        margin-top: 12px;
+      }
+      .crop-rotate .btn {
+        flex: 1;
+      }
       .crop-actions {
         display: flex;
         gap: 12px;
-        margin-top: 14px;
+        margin-top: 10px;
       }
       .crop-actions .btn {
         flex: 1;
@@ -662,10 +670,15 @@
     <!-- Crop overlay: pick the single recipe to read -->
     <div class="crop-modal" id="crop-modal">
       <div class="crop-help">
-        Drag the box around the <strong>one recipe</strong> you want, then tap
+        If the page is sideways, tap <strong>Rotate</strong> until it's upright.
+        Then drag the box around the <strong>one recipe</strong> you want and tap
         “Use this area.”
       </div>
       <div class="crop-stage"><img id="crop-img" alt="" /></div>
+      <div class="crop-rotate">
+        <button class="btn btn-secondary" id="rotate-left">↺ Rotate</button>
+        <button class="btn btn-secondary" id="rotate-right">Rotate ↻</button>
+      </div>
       <div class="crop-actions">
         <button class="btn btn-ghost" id="crop-cancel">Cancel</button>
         <button class="btn btn-primary" id="crop-confirm">Use this area</button>
@@ -714,7 +727,7 @@
       };
 
       // Bump this on each deploy so you can tell when the new build is live.
-      const BUILD = "2026-06-22 11:38 CDT";
+      const BUILD = "2026-06-22 11:48 CDT";
 
       const $ = (id) => document.getElementById(id);
       $("build-stamp").textContent = "Updated " + BUILD;
@@ -1070,6 +1083,11 @@
       }
 
       $("crop-cancel").addEventListener("click", closeCrop);
+
+      // Rotate the photo upright before cropping/OCR. Sideways text reads as
+      // gibberish, and the offline engine can't auto-rotate.
+      $("rotate-left").addEventListener("click", () => cropper && cropper.rotate(-90));
+      $("rotate-right").addEventListener("click", () => cropper && cropper.rotate(90));
 
       // Step 2: confirm the box → OCR only that cropped region.
       $("crop-confirm").addEventListener("click", () => {
