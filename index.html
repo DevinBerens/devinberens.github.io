@@ -451,6 +451,27 @@
         color: var(--accent2);
         font-size: 13px;
       }
+      /* ── SEARCH ── */
+      .search-wrap {
+        position: relative;
+        margin-bottom: 10px;
+      }
+      .search-icon {
+        position: absolute;
+        left: 14px;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 15px;
+        opacity: 0.7;
+        pointer-events: none;
+      }
+      .search-input {
+        padding-left: 40px;
+      }
+      .search-input::-webkit-search-cancel-button {
+        -webkit-appearance: none;
+      }
+
       /* ── BUILD STAMP ── */
       .build-stamp {
         text-align: center;
@@ -593,6 +614,16 @@
         </button>
 
         <div class="section-label">Recipes</div>
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input
+            class="input search-input"
+            id="recipe-search"
+            type="search"
+            placeholder="Search title or ingredients…"
+            autocomplete="off"
+          />
+        </div>
         <div class="chips" id="recipe-filter-chips"></div>
         <div id="recipes-list"></div>
         <div class="fab-space"></div>
@@ -727,7 +758,7 @@
       };
 
       // Bump this on each deploy so you can tell when the new build is live.
-      const BUILD = "2026-06-22 12:38 CDT";
+      const BUILD = "2026-06-22 12:49 CDT";
 
       const $ = (id) => document.getElementById(id);
       $("build-stamp").textContent = "Updated " + BUILD;
@@ -750,6 +781,7 @@
         currentGroup: null, // { name, members: [] }
         recipes: [],
         recipeFilter: "all",
+        recipeSearch: "",
         editingRecipeId: null,
         viewingRecipe: null,
         unsubGroup: null,
@@ -873,6 +905,8 @@
         teardownGroup();
         state.currentGroupId = groupId;
         state.recipeFilter = "all";
+        state.recipeSearch = "";
+        if ($("recipe-search")) $("recipe-search").value = "";
 
         state.unsubGroup = onSnapshot(doc(db, "groups", groupId), (d) => {
           if (!d.exists()) {
@@ -942,6 +976,11 @@
         if (e.key === "Enter") addMember();
       });
 
+      $("recipe-search").addEventListener("input", (e) => {
+        state.recipeSearch = e.target.value;
+        renderRecipes();
+      });
+
       async function removeMember(name) {
         if (!state.currentGroupId) return;
         if (!confirm(`Remove ${name} from this group?`)) return;
@@ -987,8 +1026,20 @@
         if (state.recipeFilter !== "all") {
           recipes = recipes.filter((r) => r.author === state.recipeFilter);
         }
+        const q = state.recipeSearch.trim().toLowerCase();
+        if (q) {
+          // match every word in the query against title + ingredients/content
+          const terms = q.split(/\s+/);
+          recipes = recipes.filter((r) => {
+            const hay = `${r.title || ""} ${r.content || ""}`.toLowerCase();
+            return terms.every((t) => hay.includes(t));
+          });
+        }
         if (!recipes.length) {
-          el.innerHTML = `<div class="empty"><div class="icon">📖</div><p>No recipes yet.</p><p>Tap “Add a recipe” to snap one in.</p></div>`;
+          el.innerHTML =
+            q || state.recipeFilter !== "all"
+              ? `<div class="empty"><div class="icon">🔍</div><p>No matching recipes.</p><p>Try a different search or cook.</p></div>`
+              : `<div class="empty"><div class="icon">📖</div><p>No recipes yet.</p><p>Tap “Add a recipe” to snap one in.</p></div>`;
           return;
         }
         el.innerHTML = recipes
@@ -1060,19 +1111,22 @@
         if (!file) return;
 
         const cropImg = $("crop-img");
+        cropImg.onload = initCropper;
         cropImg.src = URL.createObjectURL(file);
         $("crop-modal").classList.add("show");
-        cropImg.onload = () => {
-          if (cropper) cropper.destroy();
-          cropper = new Cropper(cropImg, {
-            viewMode: 1,
-            autoCropArea: 0.65,
-            background: false,
-            zoomable: true,
-            movable: true,
-          });
-        };
       });
+
+      // (Re)build the cropper on the current crop-img, fitted to the frame.
+      function initCropper() {
+        if (cropper) cropper.destroy();
+        cropper = new Cropper($("crop-img"), {
+          viewMode: 1,
+          autoCropArea: 0.65,
+          background: false,
+          zoomable: true,
+          movable: true,
+        });
+      }
 
       function closeCrop() {
         $("crop-modal").classList.remove("show");
@@ -1084,10 +1138,27 @@
 
       $("crop-cancel").addEventListener("click", closeCrop);
 
-      // Rotate the photo upright before cropping/OCR. Sideways text reads as
-      // gibberish, and the offline engine can't auto-rotate.
-      $("rotate-left").addEventListener("click", () => cropper && cropper.rotate(-90));
-      $("rotate-right").addEventListener("click", () => cropper && cropper.rotate(90));
+      // Rotate upright before cropping. We bake the rotation into the image and
+      // rebuild the cropper, so the result always re-fits the frame (Cropper's
+      // own .rotate() spins the canvas and pushes it out of view).
+      function rotateBy(deg) {
+        const img = $("crop-img");
+        const w = img.naturalWidth;
+        const h = img.naturalHeight;
+        if (!w || !h) return;
+        const canvas = document.createElement("canvas");
+        canvas.width = h; // swapped dims for a 90° turn
+        canvas.height = w;
+        const ctx = canvas.getContext("2d");
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((deg * Math.PI) / 180);
+        ctx.drawImage(img, -w / 2, -h / 2);
+        img.onload = initCropper; // refit once the rotated image loads
+        img.src = canvas.toDataURL("image/png");
+      }
+
+      $("rotate-left").addEventListener("click", () => rotateBy(-90));
+      $("rotate-right").addEventListener("click", () => rotateBy(90));
 
       // Step 2: confirm the box → OCR only that cropped region.
       $("crop-confirm").addEventListener("click", () => {
