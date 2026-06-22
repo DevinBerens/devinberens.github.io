@@ -451,7 +451,52 @@
         color: var(--accent2);
         font-size: 13px;
       }
+      /* ── CROP MODAL ── */
+      .crop-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.9);
+        padding: calc(env(safe-area-inset-top, 0px) + 14px) 14px
+          calc(env(safe-area-inset-bottom, 0px) + 14px);
+      }
+      .crop-modal.show {
+        display: flex;
+      }
+      .crop-help {
+        color: var(--text);
+        font-size: 14px;
+        line-height: 1.4;
+        margin-bottom: 12px;
+        text-align: center;
+      }
+      .crop-stage {
+        flex: 1;
+        min-height: 0;
+        overflow: hidden;
+        border-radius: 12px;
+        background: #000;
+      }
+      .crop-stage img {
+        display: block;
+        max-width: 100%;
+      }
+      .crop-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 14px;
+      }
+      .crop-actions .btn {
+        flex: 1;
+      }
     </style>
+    <!-- Cropper.js — lets you box in a single recipe before OCR -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.css"
+    />
   </head>
   <body>
     <!-- LOADING -->
@@ -564,8 +609,9 @@
             style="display: none"
           />
           <p class="hint">
-            We'll read the text from the page automatically — then you can fix
-            anything before saving. Or just type it in below.
+            You'll drag a box around the one recipe you want, then we read the
+            text from just that area — fix anything before saving. Or type it in
+            below.
           </p>
           <div class="ocr-box" id="ocr-box">
             <div class="ocr-status" id="ocr-status">Reading photo…</div>
@@ -603,8 +649,23 @@
       </div>
     </div>
 
+    <!-- Crop overlay: pick the single recipe to read -->
+    <div class="crop-modal" id="crop-modal">
+      <div class="crop-help">
+        Drag the box around the <strong>one recipe</strong> you want, then tap
+        “Use this area.”
+      </div>
+      <div class="crop-stage"><img id="crop-img" alt="" /></div>
+      <div class="crop-actions">
+        <button class="btn btn-ghost" id="crop-cancel">Cancel</button>
+        <button class="btn btn-primary" id="crop-confirm">Use this area</button>
+      </div>
+    </div>
+
     <!-- Tesseract.js for in-browser OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
+    <!-- Cropper.js for selecting a single recipe from a multi-recipe page -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -959,27 +1020,70 @@
 
       $("cancel-recipe").addEventListener("click", () => go("group"));
 
-      // ── Photo → OCR ──────────────────────────────────────────────────────────
+      // ── Photo → crop → OCR ─────────────────────────────────────────────────────
       $("photo-btn").addEventListener("click", () => $("photo-input").click());
 
-      $("photo-input").addEventListener("change", async (e) => {
+      let cropper = null;
+
+      // Step 1: pick a photo → open the crop overlay so the user can box in the
+      // single recipe they want (pages often have more than one).
+      $("photo-input").addEventListener("change", (e) => {
         const file = e.target.files?.[0];
+        e.target.value = ""; // allow re-selecting the same file
         if (!file) return;
 
+        const cropImg = $("crop-img");
+        cropImg.src = URL.createObjectURL(file);
+        $("crop-modal").classList.add("show");
+        cropImg.onload = () => {
+          if (cropper) cropper.destroy();
+          cropper = new Cropper(cropImg, {
+            viewMode: 1,
+            autoCropArea: 0.65,
+            background: false,
+            zoomable: true,
+            movable: true,
+          });
+        };
+      });
+
+      function closeCrop() {
+        $("crop-modal").classList.remove("show");
+        if (cropper) {
+          cropper.destroy();
+          cropper = null;
+        }
+      }
+
+      $("crop-cancel").addEventListener("click", closeCrop);
+
+      // Step 2: confirm the box → OCR only that cropped region.
+      $("crop-confirm").addEventListener("click", () => {
+        if (!cropper) return;
+        const canvas = cropper.getCroppedCanvas({
+          maxWidth: 2400,
+          maxHeight: 2400,
+        });
+        closeCrop();
+        if (!canvas) return;
+        canvas.toBlob((blob) => blob && runOcr(blob), "image/png");
+      });
+
+      async function runOcr(source) {
         const box = $("ocr-box");
         const fill = $("ocr-fill");
         const status = $("ocr-status");
         const img = $("preview-img");
 
         box.classList.add("show");
-        img.src = URL.createObjectURL(file);
+        img.src = URL.createObjectURL(source);
         img.style.display = "block";
         fill.style.width = "5%";
         status.textContent = "Reading photo…";
         $("photo-btn").disabled = true;
 
         try {
-          const { data } = await Tesseract.recognize(file, "eng", {
+          const { data } = await Tesseract.recognize(source, "eng", {
             logger: (m) => {
               if (m.status === "recognizing text") {
                 fill.style.width = Math.round(m.progress * 100) + "%";
@@ -1003,9 +1107,8 @@
           status.textContent = "Failed to read photo. You can type it instead.";
         } finally {
           $("photo-btn").disabled = false;
-          e.target.value = ""; // allow re-selecting the same file
         }
-      });
+      }
 
       // ── Save ──────────────────────────────────────────────────────────────────
       $("save-recipe").addEventListener("click", async () => {
