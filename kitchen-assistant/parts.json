@@ -15,6 +15,20 @@
       "status": "to buy",
       "options": [
         {
+          "name": "Hosyond 10.1-inch IPS capacitive touchscreen (Amazon ASIN B0BHQRSDZR)",
+          "price_usd": 75.99,
+          "price_as_of": "2026-11-18",
+          "pick": true,
+          "why": "Chosen: cheapest 10-inch option, 1024x600 IPS, tempered-glass touch, built-in dual speakers, and the listing title names Raspberry Pi 5/4/3. Power it from its own wall adapter; confirm a micro-HDMI cable or adapter is in the box for the Pi 5.",
+          "url": "https://www.amazon.com/dp/B0BHQRSDZR"
+        },
+        {
+          "name": "Wimaxit M1012 10.1-inch touchscreen (B&H)",
+          "price_usd": 89.99,
+          "why": "Backup: 1024x600, 5-point touch, built-in speakers, includes HDMI to micro-HDMI adapter; listed for Pi 2/3/4 only",
+          "url": "https://www.bhphotovideo.com/c/product/1750309-REG/andycine_m1012_10_1_touchscreen_display_for.html"
+        },
+        {
           "name": "UPERFECT OD101BF 10-inch touchscreen",
           "price_usd": 169.99,
           "why": "10-inch Full HD (1920x1200) touchscreen built for Raspberry Pi; compact for a counter",
