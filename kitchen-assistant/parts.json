@@ -26,14 +26,9 @@
           "price_as_of": "2026-05-27",
           "why": "Cheaper 10.1-inch 1920x1200 touchscreen with dual speakers",
           "url": "https://specpicks.com/vs/B0F43JQRP1/B0G2Y1NWXR"
-        },
-        {
-          "name": "CrowVi 15.6-inch touchscreen (Elecrow)",
-          "price_usd": null,
-          "why": "Reviewed with a Pi 5 by CNX Software; 10-point touch, 1080p, built-in stereo speakers and 3.5mm jack; larger than ideal for a counter",
-          "url": "https://www.cnx-software.com/2024/05/06/review-of-crowvi-15-6-inch-portable-usb-c-and-hdmi-touchscreen-display-with-windows-11-ubuntu-24-04-and-raspberry-pi-5/"
         }
-      ]
+      ],
+      "size_note": "15.6-inch models ruled out as too big for the counter; staying at about 10 inches."
     },
     {
       "item": "Speaker (optional: try the monitor's built-in speakers first)",
@@ -59,7 +54,7 @@
     }
   ],
   "software": {
-    "wake_word": "openWakeWord (stock models like hey_jarvis; a custom 'Hey Chef' needs training)",
+    "wake_word": "openWakeWord stock model: 'Hey Jarvis'",
     "speech_to_text": "faster-whisper (base.en)",
     "llm": "Claude API with tool use",
     "text_to_speech": "Piper"

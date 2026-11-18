@@ -13,6 +13,7 @@ Untested on hardware: treat this as a starter and expect to tune audio.
 """
 import datetime
 import os
+import re
 import subprocess
 import tempfile
 import threading
@@ -32,7 +33,12 @@ AUTHOR = os.environ.get("AUTHOR", "Devin")  # author for recipes the agent saves
 MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5-5")
 PIPER_VOICE = os.environ.get("PIPER_VOICE", "en_US-lessac-medium.onnx")
 ENABLE_WEB_SEARCH = os.environ.get("ENABLE_WEB_SEARCH", "1") == "1"
+# Wake word. Default: openWakeWord's stock "hey_jarvis" model. Other stock
+# models: alexa, hey_mycroft, hey_rhasspy; or a path to a custom .onnx model.
+# Set WAKE_MODEL to an empty string to instead listen for the phrase "Hey Chef"
+# with a tiny Whisper model (no training needed, but less reliable).
 WAKE_MODEL = os.environ.get("WAKE_MODEL", "hey_jarvis")
+WAKE_RE = re.compile(r"\b(?:hey|hay|hi|okay|ok|a)[\s,.!-]*(?:chef|shef|chief)\b[\s,.!-]*(.*)", re.I | re.S)
 
 SR = 16000
 FS_BASE = f"https://firestore.googleapis.com/v1/projects/{PROJECT_ID}/databases/(default)/documents"
@@ -228,29 +234,55 @@ def record_until_silence(max_s=15, silence_s=1.0, threshold=500):
     return np.concatenate(chunks).flatten()
 
 
-def transcribe(audio_i16):
-    global _whisper
-    if _whisper is None:
-        _whisper = WhisperModel("base.en", compute_type="int8")
-    segs, _ = _whisper.transcribe(audio_i16.astype(np.float32) / 32768.0, language="en")
+_whisper = {}
+
+
+def transcribe(audio_i16, size="base.en"):
+    if size not in _whisper:
+        _whisper[size] = WhisperModel(size, compute_type="int8")
+    segs, _ = _whisper[size].transcribe(audio_i16.astype(np.float32) / 32768.0, language="en")
     return " ".join(s.text.strip() for s in segs).strip()
 
 
+def _listen_phrase_for_chef(threshold=500):
+    """Block until someone says 'Hey Chef'. Whisper only runs on bursts of
+    speech, so the Pi stays idle in a quiet kitchen. Returns anything said
+    after the wake phrase (e.g. 'hey chef set a timer' -> 'set a timer')."""
+    block = int(SR * 0.1)
+    with sd.InputStream(samplerate=SR, channels=1, dtype="int16", blocksize=block) as stream:
+        while True:
+            data, _ = stream.read(block)
+            if np.abs(data).mean() <= threshold:
+                continue
+            chunks, quiet = [data.copy()], 0.0
+            while len(chunks) < 50 and quiet < 0.6:  # up to ~5 s, ends on 0.6 s of quiet
+                data, _ = stream.read(block)
+                chunks.append(data.copy())
+                quiet = 0.0 if np.abs(data).mean() > threshold else quiet + 0.1
+            text = transcribe(np.concatenate(chunks).flatten(), "tiny.en")
+            m = WAKE_RE.search(text)
+            if m:
+                return m.group(1).strip()
+
+
 def wait_for_wake():
-    """Block until the wake word is heard. Falls back to pressing Enter."""
+    """Block until the wake word is heard; return any command spoken with it.
+    Falls back to pressing Enter if nothing else is available."""
+    if not WAKE_MODEL:
+        return _listen_phrase_for_chef()
     try:
         from openwakeword.model import Model
 
         oww = Model(wakeword_models=[WAKE_MODEL])
     except Exception:
         input("Press Enter to talk... ")
-        return
+        return ""
     with sd.InputStream(samplerate=SR, channels=1, dtype="int16", blocksize=1280) as stream:
         while True:
             data, _ = stream.read(1280)
             scores = oww.predict(data.flatten())
             if max(scores.values()) > 0.5:
-                return
+                return ""
 
 
 # ── Claude loop ──────────────────────────────────────────────────────────────
@@ -278,9 +310,10 @@ def main():
     messages = []
     speak("Kitchen assistant ready.")
     while True:
-        wait_for_wake()
-        speak("Yes?")
-        text = transcribe(record_until_silence())
+        text = wait_for_wake()
+        if not text:
+            speak("Yes?")
+            text = transcribe(record_until_silence())
         if not text:
             continue
         print("You:", text)

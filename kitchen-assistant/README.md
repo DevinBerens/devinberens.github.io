@@ -18,7 +18,8 @@ cp .env.example .env   # fill in, then: set -a; source .env; set +a
 python kitchen_assistant.py
 ```
 
-Without a wake-word model it falls back to pressing Enter to talk.
+Say **"Hey Jarvis"** to wake it. If the wake-word model can't load, it falls back
+to pressing Enter to talk.
 
 ## Display
 
@@ -35,4 +36,6 @@ chromium-browser --kiosk https://devinberens.github.io
 - Auth is Firestore anonymous sign-in, matching `firestore.rules`.
 - Starter code, not tested on hardware. Tune `threshold` in
   `record_until_silence` for your mic and kitchen noise.
-- Stock wake words only (default `hey_jarvis`); a custom "Hey Chef" needs training.
+- Wake word is the stock `hey_jarvis` model (non-commercial license, fine for home
+  use). `WAKE_MODEL=` (empty) switches to a Whisper-based "Hey Chef" listener, which
+  needs no training but is less reliable than a real wake-word model.
