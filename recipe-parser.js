@@ -205,13 +205,11 @@ function parseOne(slice) {
       const last = entries[entries.length - 1];
       if (BULLET.test(line)) {
         entries.push({ kind: "item", text: line.replace(BULLET, "").trim(), bulleted: true });
+      } else if (/:$/.test(line) && BULLET.test(slice[i + 1] || "")) {
+        entries.push({ kind: "group", text: line }); // "Steak:" label above bullets
       } else if (last && last.kind === "item" && last.bulleted && !isTerminated(last.text)) {
         last.text += " " + line; // wrapped bullet
-      } else if (
-        state === "ingredients" &&
-        (isHeadingLike(line) || /:$/.test(line)) &&
-        BULLET.test(slice[i + 1] || "")
-      ) {
+      } else if (state === "ingredients" && isHeadingLike(line) && BULLET.test(slice[i + 1] || "")) {
         entries.push({ kind: "group", text: line });
       } else if (state === "shopping" && isHeadingLike(line)) {
         state = "skip";
@@ -256,7 +254,7 @@ function parseOne(slice) {
 
 function pushGroups(out, groups) {
   for (const g of groups) {
-    if (g.label) out.push(g.label);
+    if (g.label) out.push(g.label + ":"); // trailing colon keeps it distinct from a wrapped line
     g.items.forEach((it) => out.push("- " + it));
   }
 }
