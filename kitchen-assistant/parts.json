@@ -1,76 +1,69 @@
 {
-  "project": "Pi voice kitchen assistant",
+  "project": "Voice kitchen assistant",
   "updated": "2026-11-18",
+  "decision": "Running on the MacBook for now: no hardware to buy. The Raspberry Pi build below is optional and can be revisited later.",
   "note": "Prices are as listed by the sources on the date shown and will vary. Nothing here has been purchased or hardware-tested by Claude.",
+  "primary_setup": {
+    "computer": "MacBook",
+    "display": "MacBook screen, recipe app open at https://devinberens.github.io",
+    "microphone": "MacBook built-in mic, or the USB mic already owned (set AUDIO_INPUT_DEVICE)",
+    "speaker": "MacBook speakers or headphones",
+    "extra_cost_usd": 0
+  },
   "have": [
-    { "item": "USB microphone", "status": "owned" }
+    { "item": "USB microphone", "status": "owned" },
+    { "item": "MacBook", "status": "owned" }
   ],
-  "need": [
-    {
-      "item": "Raspberry Pi 5 (+ case, active cooler, USB-C power supply)",
-      "status": "to confirm"
-    },
-    {
-      "item": "Portable monitor (pick one)",
-      "status": "to buy",
-      "options": [
-        {
-          "name": "Hosyond 10.1-inch IPS capacitive touchscreen (Amazon ASIN B0BHQRSDZR)",
-          "price_usd": 75.99,
-          "price_as_of": "2026-11-18",
-          "pick": true,
-          "why": "Chosen: cheapest 10-inch option, 1024x600 IPS, tempered-glass touch, built-in dual speakers, and the listing title names Raspberry Pi 5/4/3. Power it from its own wall adapter; confirm a micro-HDMI cable or adapter is in the box for the Pi 5.",
-          "url": "https://www.amazon.com/dp/B0BHQRSDZR"
-        },
-        {
-          "name": "Wimaxit M1012 10.1-inch touchscreen (B&H)",
-          "price_usd": 89.99,
-          "why": "Backup: 1024x600, 5-point touch, built-in speakers, includes HDMI to micro-HDMI adapter; listed for Pi 2/3/4 only",
-          "url": "https://www.bhphotovideo.com/c/product/1750309-REG/andycine_m1012_10_1_touchscreen_display_for.html"
-        },
-        {
-          "name": "UPERFECT OD101BF 10-inch touchscreen",
-          "price_usd": 169.99,
-          "why": "10-inch Full HD (1920x1200) touchscreen built for Raspberry Pi; compact for a counter",
-          "url": "https://uperfect.com/blogs/portable-monitor/the-best-portable-monitors-for-raspberry-pi"
-        },
-        {
-          "name": "JUNEBOX 10.1-inch touchscreen for Raspberry Pi",
-          "price_usd": 119.99,
-          "price_as_of": "2026-05-27",
-          "why": "Cheaper 10.1-inch 1920x1200 touchscreen with dual speakers",
-          "url": "https://specpicks.com/vs/B0F43JQRP1/B0G2Y1NWXR"
-        }
-      ],
-      "size_note": "15.6-inch models ruled out as too big for the counter; staying at about 10 inches."
-    },
-    {
-      "item": "Speaker (optional: try the monitor's built-in speakers first)",
-      "status": "to decide",
-      "options": [
-        {
-          "name": "Monitor built-in speakers (over HDMI/USB-C audio)",
-          "price_usd": 0,
-          "why": "Small (about 2W) so may be weak over a vent hood"
-        },
-        {
-          "name": "CanaKit mini USB speaker",
-          "price_usd": null,
-          "why": "Plug and play, USB powered, no 3.5mm jack needed",
-          "url": "https://canakit.com/mini-usb-speaker-raspberry-pi.html"
-        },
-        {
-          "name": "Any small Bluetooth speaker",
-          "price_usd": null,
-          "why": "Louder, but adds a little lag"
-        }
-      ]
-    }
-  ],
+  "optional_pi_build": {
+    "status": "not buying now",
+    "need": [
+      {
+        "item": "Raspberry Pi 5 (+ case, active cooler, USB-C power supply)",
+        "status": "to confirm"
+      },
+      {
+        "item": "10-inch touchscreen (if revisiting)",
+        "options": [
+          {
+            "name": "Hosyond 10.1-inch IPS capacitive touchscreen (Amazon ASIN B0BHQRSDZR)",
+            "price_usd": 75.99,
+            "price_as_of": "2026-11-18",
+            "pick": true,
+            "why": "Cheapest 10-inch option, 1024x600 IPS, tempered-glass touch, built-in dual speakers, and the listing title names Raspberry Pi 5/4/3. Power it from its own wall adapter; confirm a micro-HDMI cable or adapter is in the box for the Pi 5.",
+            "url": "https://www.amazon.com/dp/B0BHQRSDZR"
+          },
+          {
+            "name": "Wimaxit M1012 10.1-inch touchscreen (B&H)",
+            "price_usd": 89.99,
+            "why": "Backup: 1024x600, 5-point touch, built-in speakers, includes HDMI to micro-HDMI adapter; listed for Pi 2/3/4 only",
+            "url": "https://www.bhphotovideo.com/c/product/1750309-REG/andycine_m1012_10_1_touchscreen_display_for.html"
+          },
+          {
+            "name": "UPERFECT OD101BF 10-inch touchscreen",
+            "price_usd": 169.99,
+            "why": "10-inch Full HD (1920x1200) touchscreen built for Raspberry Pi",
+            "url": "https://uperfect.com/blogs/portable-monitor/the-best-portable-monitors-for-raspberry-pi"
+          }
+        ],
+        "size_note": "15.6-inch models ruled out as too big for the counter; staying at about 10 inches."
+      },
+      {
+        "item": "Speaker (optional: try the monitor's built-in speakers first)",
+        "options": [
+          { "name": "Monitor built-in speakers", "price_usd": 0 },
+          {
+            "name": "CanaKit mini USB speaker",
+            "url": "https://canakit.com/mini-usb-speaker-raspberry-pi.html"
+          },
+          { "name": "Any small Bluetooth speaker" }
+        ]
+      }
+    ]
+  },
   "software": {
     "wake_word": "openWakeWord stock model: 'Hey Jarvis'",
     "speech_to_text": "faster-whisper (base.en)",
     "llm": "Claude API with tool use",
-    "text_to_speech": "Piper"
+    "text_to_speech": "macOS 'say' (default on Mac); Piper on Linux/Pi"
   }
 }

@@ -15,6 +15,7 @@ import datetime
 import os
 import re
 import subprocess
+import sys
 import tempfile
 import threading
 import wave
@@ -32,6 +33,16 @@ GROUP_NAME = os.environ["GROUP_NAME"]  # name of your group in the app
 AUTHOR = os.environ.get("AUTHOR", "Devin")  # author for recipes the agent saves
 MODEL = os.environ.get("CLAUDE_MODEL", "claude-sonnet-5-5")
 PIPER_VOICE = os.environ.get("PIPER_VOICE", "en_US-lessac-medium.onnx")
+# Speech output. macOS defaults to its built-in `say` voice (nothing to install);
+# Linux/Pi defaults to Piper. Override with TTS=say or TTS=piper.
+IS_MAC = sys.platform == "darwin"
+TTS = os.environ.get("TTS", "say" if IS_MAC else "piper").lower()
+SAY_VOICE = os.environ.get("SAY_VOICE", "")  # e.g. Samantha; list with: say -v '?'
+PLAYER = ["afplay"] if IS_MAC else ["aplay", "-q"]  # only used with Piper
+# Pick a specific microphone by index or name (see: python -m sounddevice).
+_dev = os.environ.get("AUDIO_INPUT_DEVICE", "")
+if _dev:
+    sd.default.device = (int(_dev) if _dev.isdigit() else _dev, None)
 ENABLE_WEB_SEARCH = os.environ.get("ENABLE_WEB_SEARCH", "1") == "1"
 # Wake word. Default: openWakeWord's stock "hey_jarvis" model. Other stock
 # models: alexa, hey_mycroft, hey_rhasspy; or a path to a custom .onnx model.
@@ -211,9 +222,15 @@ _speak_lock = threading.Lock()
 def speak(text):
     if not text.strip():
         return
-    with _speak_lock, tempfile.NamedTemporaryFile(suffix=".wav") as f:
-        subprocess.run(["piper", "--model", PIPER_VOICE, "--output_file", f.name], input=text.encode(), check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        subprocess.run(["aplay", "-q", f.name], check=False)
+    with _speak_lock:
+        if TTS == "say":
+            # Text goes in on stdin so it can never be read as command-line flags.
+            cmd = ["say"] + (["-v", SAY_VOICE] if SAY_VOICE else [])
+            subprocess.run(cmd, input=text.encode(), check=False)
+            return
+        with tempfile.NamedTemporaryFile(suffix=".wav") as f:
+            subprocess.run(["piper", "--model", PIPER_VOICE, "--output_file", f.name], input=text.encode(), check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            subprocess.run(PLAYER + [f.name], check=False)
 
 
 def record_until_silence(max_s=15, silence_s=1.0, threshold=500):
@@ -273,7 +290,8 @@ def wait_for_wake():
     try:
         from openwakeword.model import Model
 
-        oww = Model(wakeword_models=[WAKE_MODEL])
+        # onnx works on macOS and Linux (the tflite runtime isn't available on Mac).
+        oww = Model(wakeword_models=[WAKE_MODEL], inference_framework="onnx")
     except Exception:
         input("Press Enter to talk... ")
         return ""
