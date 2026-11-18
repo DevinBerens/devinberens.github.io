@@ -1,0 +1,8 @@
+anthropic
+requests
+numpy
+sounddevice
+faster-whisper
+openwakeword
+# Optional (only for TTS=piper, the default on Linux/Raspberry Pi):
+# piper-tts
