@@ -1,0 +1,67 @@
+{
+  "project": "Pi voice kitchen assistant",
+  "updated": "2026-11-18",
+  "note": "Prices are as listed by the sources on the date shown and will vary. Nothing here has been purchased or hardware-tested by Claude.",
+  "have": [
+    { "item": "USB microphone", "status": "owned" }
+  ],
+  "need": [
+    {
+      "item": "Raspberry Pi 5 (+ case, active cooler, USB-C power supply)",
+      "status": "to confirm"
+    },
+    {
+      "item": "Portable monitor (pick one)",
+      "status": "to buy",
+      "options": [
+        {
+          "name": "UPERFECT OD101BF 10-inch touchscreen",
+          "price_usd": 169.99,
+          "why": "10-inch Full HD (1920x1200) touchscreen built for Raspberry Pi; compact for a counter",
+          "url": "https://uperfect.com/blogs/portable-monitor/the-best-portable-monitors-for-raspberry-pi"
+        },
+        {
+          "name": "JUNEBOX 10.1-inch touchscreen for Raspberry Pi",
+          "price_usd": 119.99,
+          "price_as_of": "2026-05-27",
+          "why": "Cheaper 10.1-inch 1920x1200 touchscreen with dual speakers",
+          "url": "https://specpicks.com/vs/B0F43JQRP1/B0G2Y1NWXR"
+        },
+        {
+          "name": "CrowVi 15.6-inch touchscreen (Elecrow)",
+          "price_usd": null,
+          "why": "Reviewed with a Pi 5 by CNX Software; 10-point touch, 1080p, built-in stereo speakers and 3.5mm jack; larger than ideal for a counter",
+          "url": "https://www.cnx-software.com/2024/05/06/review-of-crowvi-15-6-inch-portable-usb-c-and-hdmi-touchscreen-display-with-windows-11-ubuntu-24-04-and-raspberry-pi-5/"
+        }
+      ]
+    },
+    {
+      "item": "Speaker (optional: try the monitor's built-in speakers first)",
+      "status": "to decide",
+      "options": [
+        {
+          "name": "Monitor built-in speakers (over HDMI/USB-C audio)",
+          "price_usd": 0,
+          "why": "Small (about 2W) so may be weak over a vent hood"
+        },
+        {
+          "name": "CanaKit mini USB speaker",
+          "price_usd": null,
+          "why": "Plug and play, USB powered, no 3.5mm jack needed",
+          "url": "https://canakit.com/mini-usb-speaker-raspberry-pi.html"
+        },
+        {
+          "name": "Any small Bluetooth speaker",
+          "price_usd": null,
+          "why": "Louder, but adds a little lag"
+        }
+      ]
+    }
+  ],
+  "software": {
+    "wake_word": "openWakeWord (stock models like hey_jarvis; a custom 'Hey Chef' needs training)",
+    "speech_to_text": "faster-whisper (base.en)",
+    "llm": "Claude API with tool use",
+    "text_to_speech": "Piper"
+  }
+}
