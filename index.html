@@ -529,6 +529,176 @@
       .crop-actions .btn {
         flex: 1;
       }
+
+      /* ── STRUCTURED RECIPE VIEW (Ingredients / Instructions / Shopping list) ── */
+      .recipe-body.structured {
+        white-space: normal;
+      }
+      .rb-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 6px;
+      }
+      .rb-meta span {
+        background: var(--surface2);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--accent2);
+      }
+      .rb-h {
+        font-size: 12px;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 20px 0 8px;
+      }
+      .rb-h:first-child {
+        margin-top: 0;
+      }
+      .rb-group {
+        font-weight: 700;
+        margin: 12px 0 2px;
+      }
+      .rb-para {
+        margin: 6px 0;
+        color: var(--muted);
+      }
+      .rb-list,
+      .rb-steps {
+        list-style: none;
+      }
+      .rb-list li {
+        position: relative;
+        padding: 5px 0 5px 18px;
+        border-bottom: 1px solid var(--border);
+      }
+      .rb-list li::before {
+        content: "•";
+        position: absolute;
+        left: 2px;
+        color: var(--accent);
+      }
+      .rb-steps {
+        counter-reset: step;
+      }
+      .rb-steps li {
+        counter-increment: step;
+        position: relative;
+        padding: 8px 0 8px 38px;
+      }
+      .rb-steps li::before {
+        content: counter(step);
+        position: absolute;
+        left: 0;
+        top: 9px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #1a1206;
+        font-size: 13px;
+        font-weight: 800;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .rb-steps li b {
+        color: var(--accent2);
+      }
+
+      /* ── IMPORT PREVIEW ── */
+      .import-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 1000;
+        display: none;
+        flex-direction: column;
+        background: rgba(0, 0, 0, 0.92);
+        padding: calc(env(safe-area-inset-top, 0px) + 14px) 14px
+          calc(env(safe-area-inset-bottom, 0px) + 14px);
+      }
+      .import-modal.show {
+        display: flex;
+      }
+      .import-head {
+        font-size: 14px;
+        line-height: 1.4;
+        text-align: center;
+        margin-bottom: 10px;
+      }
+      .import-list {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .import-card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 12px;
+      }
+      .import-card.off {
+        opacity: 0.6;
+      }
+      .import-top {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .import-top input[type="checkbox"] {
+        width: 22px;
+        height: 22px;
+        flex: none;
+        accent-color: var(--accent);
+      }
+      .import-top .input {
+        flex: 1;
+      }
+      .import-stats {
+        font-size: 12px;
+        color: var(--muted);
+        margin: 8px 0 4px;
+      }
+      .import-warn {
+        font-size: 12px;
+        color: var(--accent2);
+        margin: 4px 0;
+      }
+      .import-card summary,
+      .import-skipped summary {
+        font-size: 13px;
+        color: var(--accent);
+        cursor: pointer;
+        margin: 6px 0;
+      }
+      .import-card .textarea {
+        min-height: 240px;
+        font-size: 13px;
+      }
+      .import-skipped {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .import-skipped pre {
+        white-space: pre-wrap;
+        margin-top: 6px;
+      }
+      .import-foot {
+        display: flex;
+        gap: 12px;
+        margin-top: 10px;
+      }
+      .import-foot .btn {
+        flex: 1;
+      }
     </style>
     <!-- Cropper.js — lets you box in a single recipe before OCR -->
     <link
@@ -646,6 +816,24 @@
           />
         </div>
 
+        <div class="field" id="import-field">
+          <label>Import from a PDF or text file</label>
+          <button class="btn btn-secondary" id="import-btn">
+            📄 Choose PDF / text file
+          </button>
+          <input
+            type="file"
+            id="import-input"
+            accept=".pdf,application/pdf,.txt,.md,text/plain"
+            style="display: none"
+          />
+          <p class="hint">
+            One recipe or a whole cookbook. We split it into ingredients,
+            instructions and shopping list, and show a preview before anything
+            is saved.
+          </p>
+        </div>
+
         <div class="field">
           <label>Snap a photo of the recipe</label>
           <button class="btn btn-secondary" id="photo-btn">
@@ -678,6 +866,18 @@
           ></textarea>
         </div>
 
+        <div class="btn-row" style="margin-bottom: 8px">
+          <button class="btn btn-secondary" id="template-btn">
+            📝 Use template
+          </button>
+          <button class="btn btn-secondary" id="tidy-btn">✨ Tidy &amp; split</button>
+        </div>
+        <p class="hint" style="margin-bottom: 16px">
+          Template: Serves/Time, then <b>Ingredients</b>, <b>Instructions</b>
+          and <b>Shopping list</b> headings with “- ” bullets and “1.” steps.
+          “Tidy &amp; split” formats pasted text the same way.
+        </p>
+
         <div class="btn-row">
           <button class="btn btn-ghost" id="cancel-recipe">Cancel</button>
           <button class="btn btn-primary" id="save-recipe">Save recipe</button>
@@ -690,6 +890,13 @@
         <div class="recipe-title" id="detail-title">—</div>
         <div class="recipe-by" id="detail-author">—</div>
         <div class="recipe-body" id="detail-body">—</div>
+        <button
+          class="btn btn-secondary"
+          id="copy-shopping"
+          style="display: none; margin-bottom: 10px"
+        >
+          🛒 Copy shopping list
+        </button>
         <div class="btn-row">
           <button class="btn btn-secondary" id="edit-recipe">Edit</button>
           <button class="btn btn-danger" id="delete-recipe">Delete</button>
@@ -716,10 +923,22 @@
       </div>
     </div>
 
+    <!-- Import preview: review recipes found in a PDF/text file before saving -->
+    <div class="import-modal" id="import-modal">
+      <div class="import-head" id="import-head"></div>
+      <div class="import-list" id="import-list"></div>
+      <div class="import-foot">
+        <button class="btn btn-ghost" id="import-cancel">Cancel</button>
+        <button class="btn btn-primary" id="import-save">Save recipes</button>
+      </div>
+    </div>
+
     <!-- Tesseract.js for in-browser OCR -->
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.1.1/dist/tesseract.min.js"></script>
     <!-- Cropper.js for selecting a single recipe from a multi-recipe page -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.2/cropper.min.js"></script>
+    <!-- pdf.js for reading text out of PDF files (recipe import) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -742,6 +961,14 @@
         signInAnonymously,
         onAuthStateChanged,
       } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+      import {
+        parseRecipes,
+        parseContent,
+        shoppingItems,
+        cleanContent,
+        TEMPLATE,
+        MAX_CONTENT,
+      } from "./recipe-parser.js";
 
       /* ════════════════════════════════════════════════════════════════════
          FIREBASE_CONFIG — paste your own Firebase web config here.
@@ -758,7 +985,7 @@
       };
 
       // Bump this on each deploy so you can tell when the new build is live.
-      const BUILD = "2026-06-22 12:49 CDT";
+      const BUILD = "2026-11-18 08:05 CST";
 
       const $ = (id) => document.getElementById(id);
       $("build-stamp").textContent = "Updated " + BUILD;
@@ -1084,6 +1311,7 @@
         $("preview-img").src = "";
         $("ocr-box").classList.remove("show");
         $("ocr-fill").style.width = "0";
+        $("import-field").style.display = "";
         renderAuthorOptions();
       }
 
@@ -1402,10 +1630,13 @@
       $("save-recipe").addEventListener("click", async () => {
         const author = $("recipe-author").value;
         const title = $("recipe-title").value.trim();
-        const content = $("recipe-content").value.trim();
+        // Drops empty bullets/steps/headings left over from the template.
+        const content = cleanContent($("recipe-content").value);
         if (!author) return alert("Pick whose recipe this is.");
         if (!title) return alert("Give the recipe a title.");
         if (!content) return alert("The recipe is empty.");
+        if (content.length > MAX_CONTENT)
+          return alert("That recipe is too long to save. Try splitting it up.");
 
         const recipesCol = collection(
           db,
@@ -1449,7 +1680,8 @@
         state.viewingRecipe = r;
         $("detail-title").textContent = r.title || "Untitled recipe";
         $("detail-author").textContent = "by " + (r.author || "Unknown");
-        $("detail-body").textContent = r.content || "";
+        renderRecipeBody(r.content || "");
+        updateCopyShopping(r.content || "");
         go("recipe");
       }
 
@@ -1458,6 +1690,7 @@
         if (!r) return;
         resetRecipeForm();
         state.editingRecipeId = r.id;
+        $("import-field").style.display = "none"; // import is for new recipes
         renderAuthorOptions();
         $("recipe-author").value = r.author || "";
         $("recipe-title").value = r.title || "";
@@ -1473,6 +1706,343 @@
           doc(db, "groups", state.currentGroupId, "recipes", r.id)
         );
         go("group");
+      });
+
+      // ════════════════════════════════════════════════════════════════════════
+      //  RECIPE DISPLAY (sections), IMPORT (PDF / text), TEMPLATE, TIDY
+      //  Parsing lives in recipe-parser.js. Recipes are still one text string,
+      //  so older free-text recipes show exactly as before.
+      // ════════════════════════════════════════════════════════════════════════
+      function renderRecipeBody(content) {
+        const body = $("detail-body");
+        const { structured, blocks } = parseContent(content);
+        body.classList.toggle("structured", structured);
+        body.textContent = "";
+        if (!structured) {
+          body.textContent = content;
+          return;
+        }
+        const meta = blocks.filter((b) => b.type === "meta");
+        if (meta.length) {
+          const row = document.createElement("div");
+          row.className = "rb-meta";
+          meta.forEach((b) => {
+            const chip = document.createElement("span");
+            chip.textContent = b.text;
+            row.append(chip);
+          });
+          body.append(row);
+        }
+        let list = null;
+        let listKind = null;
+        for (const b of blocks) {
+          if (b.type === "meta") continue;
+          if (b.type === "item" || b.type === "step") {
+            const kind = b.type === "step" ? "ol" : "ul";
+            if (!list || listKind !== kind) {
+              list = document.createElement(kind);
+              list.className = kind === "ol" ? "rb-steps" : "rb-list";
+              body.append(list);
+              listKind = kind;
+            }
+            const li = document.createElement("li");
+            // Bold a short lead-in sentence ("Start the potatoes.") on steps.
+            const m =
+              b.type === "step" && /^(.{1,60}?\.)\s+(\S[\s\S]*)$/.exec(b.text);
+            if (m && m[1].split(/\s+/).length <= 6) {
+              const lead = document.createElement("b");
+              lead.textContent = m[1];
+              li.append(lead, " " + m[2]);
+            } else li.textContent = b.text;
+            list.append(li);
+          } else {
+            list = null;
+            listKind = null;
+            const el = document.createElement("div");
+            el.className =
+              b.type === "heading"
+                ? "rb-h"
+                : b.type === "group"
+                ? "rb-group"
+                : "rb-para";
+            el.textContent = b.text;
+            body.append(el);
+          }
+        }
+      }
+
+      function updateCopyShopping(content) {
+        const items = shoppingItems(content);
+        const btn = $("copy-shopping");
+        btn.style.display = items.length ? "flex" : "none";
+        btn.textContent = "🛒 Copy shopping list";
+        btn.onclick = async () => {
+          const title = state.viewingRecipe?.title;
+          const text =
+            (title ? "Shopping list — " + title + "\n" : "") +
+            items.map((i) => "• " + i).join("\n");
+          try {
+            await navigator.clipboard.writeText(text);
+            btn.textContent = "✓ Copied";
+            setTimeout(() => (btn.textContent = "🛒 Copy shopping list"), 1500);
+          } catch (e) {
+            alert(text); // clipboard blocked: show it so it can be copied by hand
+          }
+        };
+      }
+
+      // ── Reading files ─────────────────────────────────────────────────────────
+      const MAX_FILE_MB = 15;
+      const MAX_PDF_PAGES = 60;
+      const PDFJS_WORKER =
+        "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+      // Rebuild lines from pdf.js text items by grouping on vertical position.
+      async function pdfToText(file) {
+        if (!window.pdfjsLib)
+          throw new Error(
+            "The PDF reader didn't load. Check your connection and try again."
+          );
+        window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+        const pdf = await window.pdfjsLib.getDocument({
+          data: await file.arrayBuffer(),
+        }).promise;
+        if (pdf.numPages > MAX_PDF_PAGES)
+          throw new Error(
+            `That PDF has ${pdf.numPages} pages (the limit is ${MAX_PDF_PAGES}).`
+          );
+        const lines = [];
+        for (let p = 1; p <= pdf.numPages; p++) {
+          const content = await (await pdf.getPage(p)).getTextContent();
+          const rows = [];
+          for (const it of content.items) {
+            if (!it.str || !it.str.trim()) continue;
+            const x = it.transform[4];
+            const y = it.transform[5];
+            let row = rows.find((r) => Math.abs(r.y - y) < 3);
+            if (!row) rows.push((row = { y, items: [] }));
+            row.items.push({ x, w: it.width || 0, s: it.str });
+          }
+          rows.sort((a, b) => b.y - a.y);
+          for (const row of rows) {
+            row.items.sort((a, b) => a.x - b.x);
+            let line = "";
+            let prevEnd = null;
+            for (const it of row.items) {
+              if (prevEnd !== null && it.x - prevEnd > 1) line += " ";
+              line += it.s;
+              prevEnd = it.x + it.w;
+            }
+            lines.push(line.replace(/\s+/g, " ").trim());
+          }
+        }
+        return lines.join("\n");
+      }
+
+      async function fileToText(file) {
+        if (file.size > MAX_FILE_MB * 1024 * 1024)
+          throw new Error(`That file is over ${MAX_FILE_MB} MB.`);
+        const isPdf =
+          file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+        return isPdf ? pdfToText(file) : file.text();
+      }
+
+      // ── Import preview ────────────────────────────────────────────────────────
+      const importState = { cards: [] };
+      const normTitle = (t) =>
+        String(t || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+      const countItems = (groups) =>
+        groups.reduce((n, g) => n + g.items.length, 0);
+
+      function updateImportCount() {
+        const n = importState.cards.filter((c) => c.cb.checked).length;
+        const btn = $("import-save");
+        btn.disabled = n === 0;
+        btn.textContent = n ? `Save ${n} recipe${n === 1 ? "" : "s"}` : "Nothing selected";
+      }
+
+      function openImportPreview(result, sourceName) {
+        const existing = new Set(state.recipes.map((r) => normTitle(r.title)));
+        const list = $("import-list");
+        list.textContent = "";
+        importState.cards = [];
+        const n = result.recipes.length;
+        $("import-head").textContent = `Found ${n} recipe${
+          n === 1 ? "" : "s"
+        } in ${sourceName}. Tick the ones to save; open “Review text” to fix anything first.`;
+
+        result.recipes.forEach((r) => {
+          const dup = existing.has(normTitle(r.title));
+          const card = document.createElement("div");
+          card.className = "import-card";
+
+          const top = document.createElement("div");
+          top.className = "import-top";
+          const cb = document.createElement("input");
+          cb.type = "checkbox";
+          cb.checked = !dup && !r.warnings.length;
+          const title = document.createElement("input");
+          title.className = "input";
+          title.maxLength = 120;
+          title.value = r.title;
+          top.append(cb, title);
+
+          const stats = document.createElement("div");
+          stats.className = "import-stats";
+          stats.textContent = [
+            `${countItems(r.ingredients)} ingredients`,
+            `${r.steps.length} steps`,
+            `${countItems(r.shopping)} shopping items`,
+            ...r.meta,
+          ].join(" · ");
+          card.append(top, stats);
+
+          const warns = [...r.warnings];
+          if (dup) warns.push("Already in your recipe box, so it's unticked to avoid a duplicate.");
+          warns.forEach((w) => {
+            const el = document.createElement("div");
+            el.className = "import-warn";
+            el.textContent = "⚠ " + w;
+            card.append(el);
+          });
+
+          const det = document.createElement("details");
+          const sum = document.createElement("summary");
+          sum.textContent = "Review text";
+          const ta = document.createElement("textarea");
+          ta.className = "textarea";
+          ta.value = r.content;
+          det.append(sum, ta);
+          card.append(det);
+
+          cb.addEventListener("change", () => {
+            card.classList.toggle("off", !cb.checked);
+            updateImportCount();
+          });
+          card.classList.toggle("off", !cb.checked);
+          importState.cards.push({ cb, title, ta });
+          list.append(card);
+        });
+
+        if (result.skipped.length) {
+          const det = document.createElement("details");
+          det.className = "import-skipped";
+          const sum = document.createElement("summary");
+          sum.textContent = `${result.skipped.length} lines of other text were left out (intro, notes)`;
+          const pre = document.createElement("pre");
+          pre.textContent = result.skipped.join("\n");
+          det.append(sum, pre);
+          list.append(det);
+        }
+        updateImportCount();
+        $("import-modal").classList.add("show");
+      }
+
+      $("import-cancel").addEventListener("click", () =>
+        $("import-modal").classList.remove("show")
+      );
+
+      $("import-save").addEventListener("click", async () => {
+        const author = $("recipe-author").value;
+        if (!author) return alert("Pick whose recipes these are first.");
+        const picks = importState.cards.filter((c) => c.cb.checked);
+        const recipesCol = collection(db, "groups", state.currentGroupId, "recipes");
+        const btn = $("import-save");
+        btn.disabled = true;
+        let saved = 0;
+        const failed = [];
+        for (const c of picks) {
+          const title = c.title.value.trim();
+          const content = cleanContent(c.ta.value);
+          if (!title || !content || content.length > MAX_CONTENT) {
+            failed.push(title || "(no title)");
+            continue;
+          }
+          try {
+            btn.textContent = `Saving ${saved + 1} of ${picks.length}…`;
+            await addDoc(recipesCol, {
+              author,
+              title,
+              content,
+              createdAt: serverTimestamp(),
+            });
+            saved++;
+            c.cb.checked = false; // so a retry can't save it twice
+            c.cb.dispatchEvent(new Event("change"));
+          } catch (err) {
+            console.error(err);
+            failed.push(title);
+          }
+        }
+        updateImportCount();
+        if (failed.length) {
+          alert(
+            `Saved ${saved}. These didn't save, so check the title and text and try again:\n• ` +
+              failed.join("\n• ")
+          );
+        } else {
+          $("import-modal").classList.remove("show");
+          go("group");
+        }
+      });
+
+      $("import-btn").addEventListener("click", () => $("import-input").click());
+      $("import-input").addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        e.target.value = "";
+        if (!file) return;
+        const btn = $("import-btn");
+        const label = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = "Reading file…";
+        try {
+          const text = await fileToText(file);
+          const result = parseRecipes(text);
+          if (!result.recipes.length) {
+            $("recipe-content").value = text.trim().slice(0, MAX_CONTENT);
+            alert(
+              "Couldn't find Ingredients and Instructions sections in that file. The text is in the box below so you can tidy it up, or tap “Use template” to see the layout."
+            );
+          } else openImportPreview(result, file.name);
+        } catch (err) {
+          console.error(err);
+          alert(err.message || "Couldn't read that file.");
+        } finally {
+          btn.disabled = false;
+          btn.textContent = label;
+        }
+      });
+
+      $("template-btn").addEventListener("click", () => {
+        const box = $("recipe-content");
+        if (
+          box.value.trim() &&
+          !confirm("Replace what's in the box with the blank template?")
+        )
+          return;
+        box.value = TEMPLATE;
+        box.focus();
+      });
+
+      $("tidy-btn").addEventListener("click", () => {
+        const text = $("recipe-content").value;
+        if (!text.trim()) return alert("Paste or type a recipe in the box first.");
+        const result = parseRecipes(text);
+        if (!result.recipes.length)
+          return alert(
+            "Couldn't find Ingredients and Instructions in that text. Tap “Use template” to see the layout."
+          );
+        if (result.recipes.length > 1) return openImportPreview(result, "your text");
+        if (
+          result.skipped.length &&
+          !confirm(
+            `Tidying will leave out ${result.skipped.length} line(s) that aren't part of the recipe. Continue?`
+          )
+        )
+          return;
+        const r = result.recipes[0];
+        $("recipe-content").value = r.content;
+        if (!$("recipe-title").value.trim()) $("recipe-title").value = r.title;
       });
 
       // ── Util ──────────────────────────────────────────────────────────────────
