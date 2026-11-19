@@ -53,7 +53,7 @@ The app needs a free Firebase project so recipes are shared across phones.
    ```
 
 5. Commit and push. GitHub Pages serves it at
-   <https://devinberens.github.io>.
+   <https://devinberens.github.io/recipes/>.
 
 Until the config is filled in, the app shows a friendly setup screen instead of
 crashing.
@@ -132,7 +132,9 @@ nothing to clean up and the free tier goes a long way.
 
 | File         | Purpose                                                        |
 | ------------ | -------------------------------------------------------------- |
-| `index.html` | The entire app (UI, Firebase sync, Tesseract.js OCR).          |
+| `recipes/index.html` | The entire app (UI, Firebase sync, Tesseract.js OCR).          |
+| `index.html` | Launcher page: links to Recipe Box and the Hockey Dashboard. |
+| `hockey/` | Hockey Dashboard (placeholder; see ~/Documents/hockeyDashboard). |
 | `.nojekyll`  | Tells GitHub Pages to serve the HTML as-is (no Jekyll).        |
 | `package.json` | Just a name + a `start` script for local serving.            |
 
@@ -140,6 +142,6 @@ nothing to clean up and the free tier goes a long way.
 
 ## Adding it to your phone's home screen
 
-1. Open Safari/Chrome on your phone and go to <https://devinberens.github.io>.
+1. Open Safari/Chrome on your phone and go to <https://devinberens.github.io/recipes/>.
 2. Share → **Add to Home Screen**.
 3. Name it "Recipe Box". It'll behave like a native app, full-screen.

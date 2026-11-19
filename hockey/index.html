@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Hockey" />
+    <title>Hockey Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #0b0e12;
+        --surface: #12171e;
+        --border: rgba(255, 255, 255, 0.07);
+        --text: #eef3f8;
+        --muted: #7d8a99;
+        --accent: #4cc3ff;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Inter", -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        min-height: 100vh;
+        padding: calc(env(safe-area-inset-top, 0px) + 20px) 16px
+          calc(env(safe-area-inset-bottom, 0px) + 24px);
+      }
+      main { max-width: 480px; margin: 0 auto; }
+      a.back { color: var(--muted); text-decoration: none; font-size: 15px; }
+      h1 { font-size: 28px; font-weight: 800; margin: 20px 0 6px; }
+      p.sub { color: var(--muted); margin-bottom: 24px; }
+      ol { list-style: none; display: grid; gap: 10px; }
+      li {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px 16px;
+        color: var(--muted);
+      }
+      li strong { color: var(--text); font-weight: 600; }
+      li.now { border-color: var(--accent); }
+      li.now strong::after { content: " · in progress"; color: var(--accent); font-weight: 400; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <a class="back" href="../">‹ All apps</a>
+      <h1>🏒 Hockey Dashboard</h1>
+      <p class="sub">Heart rate and movement stats from a Garmin vívoactive 5. Coming soon.</p>
+      <ol>
+        <li class="now"><strong>1. Prove the watch sensors</strong></li>
+        <li><strong>2. Watch app</strong>: track a hockey session</li>
+        <li><strong>3. Backend</strong>: store sessions</li>
+        <li><strong>4. This dashboard</strong>: charts and trends</li>
+        <li><strong>5. Sync</strong>: watch to phone to server</li>
+        <li><strong>6. Hockey analytics</strong>: shifts, workload, recovery</li>
+      </ol>
+    </main>
+  </body>
+</html>
